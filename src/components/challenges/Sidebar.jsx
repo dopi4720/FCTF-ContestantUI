@@ -1,19 +1,14 @@
-import { useState, useEffect, useRef } from "react";
-import { FiSearch, FiMenu, FiX } from "react-icons/fi";
+import { useEffect, useRef, useState } from "react";
+import { FiSearch } from "react-icons/fi";
 import { LuComputer } from "react-icons/lu";
+import { API_CHALLENGE_GET_TOPICS, BASE_URL, GET_CHALLENGE_LIST_PATH } from "../../constants/ApiConstant";
+import ApiHelper from "../../utils/ApiHelper";
 
 const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [topics, setTopics] = useState([
-        { id: 1, name: "Technology" },
-        { id: 2, name: "Science" },
-        { id: 3, name: "Business" },
-        { id: 4, name: "Health" },
-        { id: 5, name: "Education" },
-        { id: 6, name: "Entertainment" },
-        { id: 7, name: "Sports" },
-        { id: 8, name: "Politics" },
+        
     ]);
     const [filteredTopics, setFilteredTopics] = useState(topics);
     const searchTimeout = useRef(null);
@@ -34,8 +29,16 @@ const Sidebar = () => {
         }, 1000);
     };
 
-    const handleTopicClick = (topic) => {
-        console.log("Selected topic:", topic.name);
+    const handleTopicClick = async (topic) => {
+        console.log("Selected topic:", topic.topic_name);
+        const api = new ApiHelper(BASE_URL);
+        try {
+            // Fetch challenges for the selected topic
+            const response = await api.get(`${GET_CHALLENGE_LIST_PATH}${topic.topic_name}`);
+            setChallenges(response.data); // Update challenges state with fetched data
+        } catch (error) {
+            console.log(error, "Error fetching challenges");
+        }
     };
 
     useEffect(() => {
@@ -47,8 +50,19 @@ const Sidebar = () => {
     }, []);
 
     useEffect(() => {
+        const fetchListTopics = async () => {
+            const api = new ApiHelper(BASE_URL);
+            try {
+                const response = await api.get(API_CHALLENGE_GET_TOPICS);
+                setTopics(response.data);
+                setFilteredTopics(response.data);
+            } catch (error) {
+                console.log(error, "Error fetching topics");
+            }
+        };
+
         if (isOpen) {
-            //CALL API TO GET TOPIC HERE
+            fetchListTopics();
         }
     }, [isOpen]);
 
@@ -79,7 +93,7 @@ const Sidebar = () => {
                             >
                                 <LuComputer />
                                 <span className="text-theme-color-neutral-content font-medium">
-                                    {topic.name}
+                                    {topic.topic_name}
                                 </span>
                             </button>
                         ))}

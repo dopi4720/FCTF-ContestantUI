@@ -1,12 +1,11 @@
-import { useState } from 'react'
-import './App.css'
-import Template from './components/Template'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ChallengeTopics from './components/challenges/ChallengeTopics';
+import { useState } from 'react';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import './App.css';
+import LoginComponent from './components/auth/LoginComponent';
 import ChallengeDetail from './components/challenges/ChallengeDetail';
 import ChallengeList from './components/challenges/ChallengeList';
-import LoginComponent from './components/auth/LoginComponent';
-import Sidebar from './components/challenges/Sidebar';
+import ChallengeTopics from './components/challenges/ChallengeTopics';
+import Template from './components/Template';
 
 function App() {
   const [count, setCount] = useState(0)

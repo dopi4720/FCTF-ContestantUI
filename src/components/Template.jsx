@@ -1,4 +1,4 @@
-import React, { useState , useEffect} from "react";
+import React, { useEffect, useState } from "react";
 import { FaFlag, FaSignOutAlt } from "react-icons/fa";
 import { FaRankingStar } from "react-icons/fa6";
 import { IoTicket } from "react-icons/io5";
@@ -16,6 +16,12 @@ const Template = ({ children }) => {
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
+    };
+
+    const handleLogout = () => {
+        console.log("Logout button clicked"); // Check if this logs
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    navigate('/login');
     };
 
     useEffect(() => {
@@ -57,7 +63,7 @@ const Template = ({ children }) => {
                         </div>
 
                         <div className="hidden md:flex w-1/4 justify-end">
-                            <button className="flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-theme-color-primary hover:bg-theme-color-primary-dark transition-all duration-300">
+                            <button onClick={handleLogout} className="flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-theme-color-primary hover:bg-theme-color-primary-dark transition-all duration-300">
                                 <FaSignOutAlt className="mr-2" />
                                 Logout
                             </button>
@@ -101,7 +107,7 @@ const Template = ({ children }) => {
                                     {item.title}
                                 </button>
                             ))}
-                            <button className="flex items-center w-full px-3 py-2 rounded-md text-sm font-medium text-white bg-theme-color-primary hover:bg-theme-color-primary-dark transition-all duration-300">
+                            <button  className="flex items-center w-full px-3 py-2 rounded-md text-sm font-medium text-white bg-theme-color-primary hover:bg-theme-color-primary-dark transition-all duration-300">
                                 <FaSignOutAlt className="mr-2" />
                                 Logout
                             </button>

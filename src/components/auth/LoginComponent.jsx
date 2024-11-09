@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 import { BASE_URL, LOGIN_PATH } from "../../constants/ApiConstant";
 import { ACCESS_TOKEN_KEY } from "../../constants/LocalStorageKey";
-import { useNavigate } from 'react-router-dom';
 
 const LoginComponent = () => {
   const navigate = useNavigate();
