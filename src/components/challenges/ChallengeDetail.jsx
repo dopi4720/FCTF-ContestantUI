@@ -1,12 +1,24 @@
-import React, { useState, useEffect } from "react";
-import { FiClock, FiCheck, FiAlertCircle } from "react-icons/fi";
+import React, { useEffect, useState } from "react";
+import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
+import { useParams } from "react-router-dom";
+import { BASE_URL, GET_CHALLENGE_DETAILS } from "../../constants/ApiConstant";
+import ApiHelper from "../../utils/ApiHelper";
 
 const ChallengeDetail = () => {
-  const [timeLeft, setTimeLeft] = useState(3600); // 1 hour in seconds
+  const { id } = useParams();
+  const challengeId = id ? parseInt(id, 10) : undefined;
+  const [timeLeft, setTimeLeft] = useState(3600); 
   const [answer, setAnswer] = useState("");
+  
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [showTimeUpAlert, setShowTimeUpAlert] = useState(false);
+  const [challenge, setChallenge] = useState(null);
+
+  //flag submit
+  const [flag, setFlag] = useState("");
+  const [isSubmittingFlag, setIsSubmittingFlag] = useState(false);
+  
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -23,6 +35,53 @@ const ChallengeDetail = () => {
       return () => clearInterval(timer);
     }
   }, [timeLeft]);
+
+  useEffect(() => {
+    const fetchChallengeDetails = async () => {
+      const api = new ApiHelper(BASE_URL);
+      try {
+        const response = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
+        setChallenge(response.data);
+        setError(false);
+      } catch (err) {
+        console.error("Error fetching challenge:", err);
+        setChallenge(null);
+        setError(true);
+      }
+    };
+
+    fetchChallengeDetails();
+  }, [id]);
+
+  const handleSubmitFlag = async () => {
+    setIsSubmittingFlag(true);
+    setSubmissionError(null);
+    try {
+      const response = await ChallengeService.submitFlag(challengeId, flag);
+      if (response?.data.data.status === "correct") {
+        alert(`${response.data.data.message}`);
+      } else if (response?.data.data.status === "already_solved") {
+        alert(`${response.data.data.message}`);
+      } else {
+        setSubmissionError(response?.data?.data?.message || "Incorrect flag");
+        alert(`${response?.data.data.message}`);
+      }
+    } catch (error) {
+      setSubmissionError("Error submitting flag.");
+      console.error("Error submitting flag:", error);
+    } finally {
+      setIsSubmittingFlag(false);
+    }
+  };
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
@@ -50,20 +109,26 @@ const ChallengeDetail = () => {
           {/* Left Section (70%) */}
           <div className="lg:w-[70%] p-8 bg-white">
             <h1 className="text-3xl font-bold text-theme-color-primary mb-6" role="heading">
-              Algorithm Challenge: Dynamic Programming
+              {challenge ? challenge.name : "Loading..."}
             </h1>
             <div className="prose max-w-none">
-              <p className="text-theme-color-neutral-content text-lg mb-6">
-                Implement a solution to find the longest common subsequence of two strings.
-                Your algorithm should have an optimal time complexity and handle edge cases appropriately.
-              </p>
-              <div className="bg-neutral-low p-4 rounded-md">
-                <h2 className="text-xl font-semibold mb-4">Example:</h2>
-                <pre className="bg-white p-4 rounded-md">
-                  Input: str1 = "ABCDGH", str2 = "AEDFHR"
-                  Output: "ADH"
-                </pre>
-              </div>
+              {challenge ? (
+                <>
+                  <p className="text-theme-color-neutral-content text-lg mb-6">
+                    Max attempts: {challenge.max_attempts} <br/>
+                    Type: {challenge.type}
+                  </p>
+                  <div className="bg-neutral-low p-4 rounded-md">
+                    <h2 className="text-xl font-semibold mb-4">Example:</h2>
+                    <pre className="bg-white p-4 rounded-md">
+                    Input: str1 = "ABCDGH", str2 = "AEDFHR"
+                    Output: "ADH"
+                    </pre>
+                  </div>
+                </>
+              ) : (
+                <p>Loading challenge details...</p>
+              )}
             </div>
           </div>
 
@@ -98,15 +163,15 @@ const ChallengeDetail = () => {
                   id="answer"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-theme-color-primary focus:border-transparent ${error ? "border-red-500" : "border-theme-color-neutral"}`}
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-theme-color-primary focus:border-transparent ${
+                    error ? "border-red-500" : "border-theme-color-neutral"
+                  }`}
                   rows="6"
                   placeholder="Enter your solution here..."
                   disabled={isSubmitted || timeLeft === 0}
                   aria-label="Answer input field"
                 />
-                {error && (
-                  <p className="text-red-500 text-sm mt-1">{error}</p>
-                )}
+                {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
               </div>
 
               <button
