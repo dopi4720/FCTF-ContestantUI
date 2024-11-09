@@ -1,3 +1,4 @@
+import Cookies from 'js-cookie';
 import React, { useEffect, useRef, useState } from "react";
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
@@ -120,10 +121,18 @@ const ChallengeDetail = () => {
     setSubmissionError(null);
     const api= new ApiHelper(BASE_URL)
     try {
+      const sessionCookie = Cookies.get('session');  // Replace 'sessionName' with your actual cookie name
+
+    if (sessionCookie) {
+  console.log('Session cookie:', sessionCookie);
+} else {
+  console.log('Session cookie not found');
+}
       const data = {
         challenge_id: challengeId,
         submission: answer,
         generatedToken: localStorage.getItem("accessToken")
+        
       }; 
       const response = await api.postForm(SUBMIT_FLAG, data)
       // const token = localStorage.getItem(ACCESS_TOKEN_KEY);

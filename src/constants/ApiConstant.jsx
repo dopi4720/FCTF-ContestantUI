@@ -1,4 +1,4 @@
-export const BASE_URL = 'http://fctf.site:8000';
+export const BASE_URL = 'http://fctf.site/';
 
 
 export const LOGIN_PATH = '/api/login-contestant'
