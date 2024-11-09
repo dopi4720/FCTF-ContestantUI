@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
-import { BASE_URL, GET_CHALLENGE_DETAILS } from "../../constants/ApiConstant";
+import { BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
+import { ACCESS_TOKEN_KEY } from "../../constants/LocalStorageKey";
 import ApiHelper from "../../utils/ApiHelper";
-
 const ChallengeDetail = () => {
   const { id } = useParams();
   const challengeId = id ? parseInt(id, 10) : undefined;
@@ -20,6 +20,8 @@ const ChallengeDetail = () => {
   //flag submit
   const [flag, setFlag] = useState("");
   const [isSubmittingFlag, setIsSubmittingFlag] = useState(false);
+  const [submissionError, setSubmissionError] = useState(null); 
+  
 
 
   useEffect(() => {
@@ -62,8 +64,16 @@ const ChallengeDetail = () => {
   const handleSubmitFlag = async () => {
     setIsSubmittingFlag(true);
     setSubmissionError(null);
+    const api= new ApiHelper(BASE_URL)
     try {
-      const response = await ChallengeService.submitFlag(challengeId, flag);
+      const data = {
+        challenge_id: challengeId,
+        submission: answer,
+      }; 
+      const response = await api.postForm(SUBMIT_FLAG, data)
+      const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+      console.log(token)
+      console.log(response)
       if (response?.data.data.status === "correct") {
         alert(`${response.data.data.message}`);
       } else if (response?.data.data.status === "already_solved") {
@@ -127,8 +137,7 @@ const ChallengeDetail = () => {
                   <div className="bg-neutral-low p-4 rounded-md">
                     <h2 className="text-xl font-semibold mb-4">Example:</h2>
                     <pre className="bg-white p-4 rounded-md">
-                      Input: str1 = "ABCDGH", str2 = "AEDFHR"
-                      Output: "ADH"
+                     {challenge.description}
                     </pre>
                   </div>
                 </>
@@ -180,7 +189,9 @@ const ChallengeDetail = () => {
               </div>
 
               <button
+                
                 type="submit"
+                onClick={handleSubmitFlag}
                 className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2
                   ${isSubmitted || timeLeft === 0
                     ? "bg-theme-color-neutral cursor-not-allowed"

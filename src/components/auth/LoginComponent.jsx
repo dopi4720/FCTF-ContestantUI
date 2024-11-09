@@ -20,6 +20,7 @@ const LoginComponent = () => {
 
   useEffect(() => {
     if (localStorage.getItem(ACCESS_TOKEN_KEY)) {
+      
       navigate('/');
     }
   }, [navigate]);
@@ -71,6 +72,7 @@ const LoginComponent = () => {
       if (response.status === 200) {
         localStorage.setItem(ACCESS_TOKEN_KEY, response.data.generatedToken);
         console.log("Login successful");
+       
         navigate('/');
       }
     } catch (error) {

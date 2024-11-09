@@ -41,12 +41,19 @@ class ApiHelper {
     }
   }
 
-  async post(url, data = {}) {
+  async postForm(url, data = {}) {
     try {
-      const response = await this.api.post(url, data);
+      const formData = new FormData();
+      Object.keys(data).forEach((key) => formData.append(key, data[key]));
+
+      const response = await this.api.post(url, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       return response.data;
     } catch (error) {
-      console.error("POST request error:", error);
+      console.error("POST Form request error:", error);
       throw error;
     }
   }
