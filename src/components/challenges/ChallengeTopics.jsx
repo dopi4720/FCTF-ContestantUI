@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
 import { BASE_URL, GET_CHALLENGE_CATEGORIES_PATH } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
+import Sidebar from "./Sidebar";
 
-const ChallengeCategories = () => {
+const ChallengeTopics = () => {
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState(false);
 
@@ -25,8 +26,10 @@ const ChallengeCategories = () => {
   }, []);
 
   return (
+    <>
+    <Sidebar/>
     <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6 justify-items-center">
         {categories.map((category) => (
           <Link
             to={`/topic/${category.topic_name}`}
@@ -50,7 +53,8 @@ const ChallengeCategories = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
-export default ChallengeCategories;
+export default ChallengeTopics;
