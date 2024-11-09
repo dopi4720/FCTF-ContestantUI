@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
 import './App.css'
-import LoginForm from './components/auth/LoginComponent'
 import ChallengeCategories from './components/challenges/ChallengeCategories'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ChallengeDetail from './components/challenges/ChallengeDetail'
 import ChallengeList from './components/challenges/ChallengeList'
 
 function App() {
@@ -14,7 +12,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<ChallengeCategories />} />
-        <Route path="/challenge/:id" element={<></>} />
+        <Route path="/challenge/:id" element={<ChallengeDetail></ChallengeDetail>} />
         <Route path="/category/:categoryName" element={<ChallengeList/>} />
       </Routes>
     </Router>

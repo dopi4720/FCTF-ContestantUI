@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from 'react-router-dom';
-import axios from "axios";
 import { BASE_URL, GET_CHALLENGE_LIST_PATH } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
 
