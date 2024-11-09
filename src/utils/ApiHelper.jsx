@@ -41,6 +41,16 @@ class ApiHelper {
     }
   }
 
+  async post(url, data = {}) {
+    try {
+      const response = await this.api.post(url, data);
+      return response.data;
+    } catch (error) {
+      console.error("POST request error:", error);
+      throw error;
+    }
+  }
+
   async postForm(url, data = {}) {
     try {
       const formData = new FormData();
