@@ -144,7 +144,7 @@ const ChallengeDetail = () => {
             <div className="mb-8">
               <div className="flex items-center justify-center space-x-2 text-2xl font-mono bg-white p-4 rounded-lg shadow-md">
                 <FiClock className="text-theme-color-primary" />
-                <span className="font-bold">{isHaveTimeLimit ? formatTime(timeLimit) : "No time limit"}</span>
+                <span className="font-bold">{isHaveTimeLimit ? (!timeLeft ? formatTime(timeLimit) : formatTime(timeLeft)) : "No time limit"}</span>
               </div>
             </div>
 
