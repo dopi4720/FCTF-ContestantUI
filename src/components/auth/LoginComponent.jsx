@@ -3,8 +3,10 @@ import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 import axios from "axios";
 import { BASE_URL, LOGIN_PATH } from "../../constants/ApiConstant";
 import { ACCESS_TOKEN_KEY } from "../../constants/LocalStorageKey";
+import { useNavigate } from 'react-router-dom';
 
-const LoginForm = () => {
+const LoginComponent = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: ""
@@ -15,6 +17,12 @@ const LoginForm = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem(ACCESS_TOKEN_KEY)) {
+      navigate('/');
+    }
+  }, [navigate]);
 
   const validateUsername = (username) => {
     const usernameRegex = /^[a-zA-Z0-9]+$/;
@@ -59,10 +67,11 @@ const LoginForm = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(BASE_URL + LOGIN_PATH, formData);
-      
+
       if (response.status === 200) {
         localStorage.setItem(ACCESS_TOKEN_KEY, response.data.generatedToken);
         console.log("Login successful");
+        navigate('/');
       }
     } catch (error) {
       console.error("Login failed:", error);
@@ -165,4 +174,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default LoginComponent;

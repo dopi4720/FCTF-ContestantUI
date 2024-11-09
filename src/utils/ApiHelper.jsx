@@ -10,10 +10,20 @@ class ApiHelper {
 
     this.api.interceptors.request.use((config) => {
       const authHeaders = this._getAuthHeaders();
-      console.log(authHeaders);
       config.headers = { ...config.headers, ...authHeaders };
       return config;
     });
+
+    // Thêm interceptors.response để xử lý lỗi 401
+    this.api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          window.location.href = "/login"; // Chuyển hướng đến trang đăng nhập
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   _getAuthHeaders() {

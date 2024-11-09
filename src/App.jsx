@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import LoginForm from './components/auth/LoginComponent'
-import ChallengeCategories from './components/challenges/ChallengeCategories'
+import Template from './components/Template'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ChallengeList from './components/challenges/ChallengeList'
+import ChallengeCategories from './components/challenges/ChallengeCategories';
+import ChallengeDetail from './components/challenges/ChallengeDetail';
+import ChallengeList from './components/challenges/ChallengeList';
+import LoginComponent from './components/auth/LoginComponent';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -13,9 +13,13 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<ChallengeCategories />} />
-        <Route path="/challenge/:id" element={<></>} />
-        <Route path="/category/:categoryName" element={<ChallengeList/>} />
+        <Route path="/" element={<Template />} />
+        <Route path="/login" element={<LoginComponent />} />
+        <Route path="/rankings" element={<Template />} />
+        <Route path="/tickets" element={<Template />} />
+        <Route path="/topics" element={<Template><ChallengeCategories /></Template>} />
+        <Route path="/challenge/:id" element={<Template><ChallengeDetail /></Template>} />
+        <Route path="/topic/:categoryName" element={<Template><ChallengeList /></Template>} />
       </Routes>
     </Router>
   )

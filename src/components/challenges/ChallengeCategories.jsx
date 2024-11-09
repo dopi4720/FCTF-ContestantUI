@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
-import axios from "axios";
 import { BASE_URL, GET_CHALLENGE_CATEGORIES_PATH } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
 
@@ -30,7 +29,7 @@ const ChallengeCategories = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center">
         {categories.map((category) => (
           <Link
-            to={`/category/${category.topic_name}`}
+            to={`/topic/${category.topic_name}`}
             key={category.topic_name}
             className="bg-white w-full max-w-sm rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out p-6 cursor-pointer"
           >
