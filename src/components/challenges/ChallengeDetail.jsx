@@ -7,9 +7,11 @@ import ApiHelper from "../../utils/ApiHelper";
 const ChallengeDetail = () => {
   const { id } = useParams();
   const challengeId = id ? parseInt(id, 10) : undefined;
-  const [timeLeft, setTimeLeft] = useState(3600); 
+  const [timeLeft, setTimeLeft] = useState(3600);
+  const [timeLimit, setTimeLimit] = useState(3600);
+  const [isHaveTimeLimit, setIsHaveTimeLimit] = useState(3600);
   const [answer, setAnswer] = useState("");
-  
+
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [showTimeUpAlert, setShowTimeUpAlert] = useState(false);
@@ -18,7 +20,7 @@ const ChallengeDetail = () => {
   //flag submit
   const [flag, setFlag] = useState("");
   const [isSubmittingFlag, setIsSubmittingFlag] = useState(false);
-  
+
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -42,6 +44,10 @@ const ChallengeDetail = () => {
       try {
         const response = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
         setChallenge(response.data);
+        setTimeLimit(response.data.time_limit);
+        if (!response.data.time_limit) {
+          setIsHaveTimeLimit(false);
+        }
         setError(false);
       } catch (err) {
         console.error("Error fetching challenge:", err);
@@ -109,20 +115,20 @@ const ChallengeDetail = () => {
           {/* Left Section (70%) */}
           <div className="lg:w-[70%] p-8 bg-white">
             <h1 className="text-3xl font-bold text-theme-color-primary mb-6" role="heading">
-              {challenge ? challenge.name : "Loading..."}
+              {challenge ? challenge.name : "..."}
             </h1>
             <div className="prose max-w-none">
               {challenge ? (
                 <>
                   <p className="text-theme-color-neutral-content text-lg mb-6">
-                    Max attempts: {challenge.max_attempts} <br/>
+                    Max attempts: {challenge.max_attempts} <br />
                     Type: {challenge.type}
                   </p>
                   <div className="bg-neutral-low p-4 rounded-md">
                     <h2 className="text-xl font-semibold mb-4">Example:</h2>
                     <pre className="bg-white p-4 rounded-md">
-                    Input: str1 = "ABCDGH", str2 = "AEDFHR"
-                    Output: "ADH"
+                      Input: str1 = "ABCDGH", str2 = "AEDFHR"
+                      Output: "ADH"
                     </pre>
                   </div>
                 </>
@@ -138,7 +144,7 @@ const ChallengeDetail = () => {
             <div className="mb-8">
               <div className="flex items-center justify-center space-x-2 text-2xl font-mono bg-white p-4 rounded-lg shadow-md">
                 <FiClock className="text-theme-color-primary" />
-                <span className="font-bold">{formatTime(timeLeft)}</span>
+                <span className="font-bold">{isHaveTimeLimit ? formatTime(timeLimit) : "No time limit"}</span>
               </div>
             </div>
 
@@ -163,9 +169,8 @@ const ChallengeDetail = () => {
                   id="answer"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-theme-color-primary focus:border-transparent ${
-                    error ? "border-red-500" : "border-theme-color-neutral"
-                  }`}
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-theme-color-primary focus:border-transparent ${error ? "border-red-500" : "border-theme-color-neutral"
+                    }`}
                   rows="6"
                   placeholder="Enter your solution here..."
                   disabled={isSubmitted || timeLeft === 0}
@@ -189,6 +194,21 @@ const ChallengeDetail = () => {
                   </>
                 ) : (
                   "Submit Answer"
+                )}
+              </button>
+
+              <button
+                type="submit"
+                className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 bg-theme-color-secondary hover:bg-theme-color-secondary-dark text-white`}
+                disabled={isSubmitted || timeLeft === 0}
+              >
+                {isSubmitted ? (
+                  <>
+                    <FiCheck className="text-white" />
+                    <span>Submitted</span>
+                  </>
+                ) : (
+                  "START CHALLENGE"
                 )}
               </button>
             </form>
