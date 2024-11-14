@@ -2,7 +2,7 @@ import Cookies from 'js-cookie';
 import React, { useEffect, useRef, useState } from "react";
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
-import { API_CHALLEGE_START, API_CHALLENGE_STOP, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
+import { API_CHALLEGE_START, API_CHALLENGE_CHECK_CACHE, API_CHALLENGE_STOP, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
 
 const ChallengeDetail = () => {
@@ -44,6 +44,20 @@ const ChallengeDetail = () => {
 
     fetchChallengeDetails();
   }, [id]);
+
+  useEffect(()=> {
+    const api= new ApiHelper(BASE_URL);
+    try {
+      const response= api.get(API_CHALLENGE_CHECK_CACHE, {
+        challenge_id: challengeId,
+        generatedToken: localStorage.getItem("accessToken")
+      })
+      
+      
+    } catch (error) {
+      
+    }
+  })
 
   useEffect(() => {
     if (isChallengeStarted && timeLeft > 0) {
@@ -121,8 +135,7 @@ const ChallengeDetail = () => {
     setSubmissionError(null);
     const api= new ApiHelper(BASE_URL)
     try {
-      const sessionCookie = Cookies.get('session');  // Replace 'sessionName' with your actual cookie name
-
+      const sessionCookie = Cookies.get('session');  
     if (sessionCookie) {
   console.log('Session cookie:', sessionCookie);
 } else {
