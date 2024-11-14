@@ -102,6 +102,7 @@ const TicketList = () => {
         </div>
       )}
 
+
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">Support Tickets</h1>
         <button

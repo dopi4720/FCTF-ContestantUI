@@ -2,7 +2,7 @@ import Cookies from 'js-cookie';
 import React, { useEffect, useRef, useState } from "react";
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
-import { API_CHALLEGE_START, API_CHALLENGE_CHECK_CACHE, API_CHALLENGE_STOP, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
+import { API_CHALLEGE_START, API_CHALLENGE_STOP, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
 
 const ChallengeDetail = () => {
@@ -33,6 +33,7 @@ const ChallengeDetail = () => {
         if (storedStartTime && response.data.time_limit) {
           const elapsedSeconds = (Date.now() - parseInt(storedStartTime, 10)) / 1000;
           const initialTimeLeft = response.data.time_limit * 60 - elapsedSeconds;
+          console.log(initialTimeLeft)
           setTimeLeft(initialTimeLeft > 0 ? initialTimeLeft : 0);
           setIsChallengeStarted(initialTimeLeft > 0);
         }
@@ -45,19 +46,19 @@ const ChallengeDetail = () => {
     fetchChallengeDetails();
   }, [id]);
 
-  useEffect(()=> {
-    const api= new ApiHelper(BASE_URL);
-    try {
-      const response= api.get(API_CHALLENGE_CHECK_CACHE, {
-        challenge_id: challengeId,
-        generatedToken: localStorage.getItem("accessToken")
-      })
+  // useEffect(()=> {
+  //   const api= new ApiHelper(BASE_URL);
+  //   try {
+  //     const response= api.get(API_CHALLENGE_CHECK_CACHE, {
+  //       challenge_id: challengeId,
+  //       generatedToken: localStorage.getItem("accessToken")
+  //     })
       
       
-    } catch (error) {
+  //   } catch (error) {
       
-    }
-  })
+  //   }
+  // })
 
   useEffect(() => {
     if (isChallengeStarted && timeLeft > 0) {
@@ -265,7 +266,7 @@ const ChallengeDetail = () => {
               </button>
 
               {/* Nút Start Challenge chỉ hiển thị nếu require_deploy là true */}
-              {challenge &&  (
+              {challenge && challenge.require_deploy (
                 <button
                   type="button"
                   onClick={isChallengeStarted ? handleStopChallenge : handleStartChallenge}
