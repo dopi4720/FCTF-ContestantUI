@@ -1,8 +1,7 @@
-import Cookies from 'js-cookie';
 import React, { useEffect, useRef, useState } from "react";
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
-import { API_CHALLEGE_START, API_CHALLENGE_STOP, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
+import { API_CHALLEGE_START, API_CHALLENGE_STOP, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG, API_CHALLENGGE_GET_CACHE } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
 
 const ChallengeDetail = () => {
@@ -18,47 +17,38 @@ const ChallengeDetail = () => {
   const [challenge, setChallenge] = useState(null);
   const timerRef = useRef(null); // Timer reference to control interval
   const [isSubmittingFlag, setIsSubmittingFlag] = useState(false);
-  const [submissionError, setSubmissionError] = useState(null); 
+  const [submissionError, setSubmissionError] = useState(null);
+  const [url, setUrl] = useState(null);
 
   useEffect(() => {
     const fetchChallengeDetails = async () => {
       const api = new ApiHelper(BASE_URL);
       try {
-        const response = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
-        setChallenge(response.data);
-        console.log("Challenge details:", response.data);
-        setTimeLimit(response.data.time_limit || null);
+        const detailsResponse = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
+        setChallenge(detailsResponse.data);
+        setTimeLimit(detailsResponse.data.time_limit || null);
+
+        if (detailsResponse.data.require_deploy) {
+          const cacheResponse = await api.postForm(API_CHALLENGGE_GET_CACHE, {
+            challenge_id: detailsResponse.data.id,
+            generatedToken: localStorage.getItem("accessToken")
+          });
+          // Handle cache data if needed
+        }
 
         const storedStartTime = localStorage.getItem(`challenge_${challengeId}_startTime`);
-        if (storedStartTime && response.data.time_limit) {
+        if (storedStartTime && detailsResponse.data.time_limit) {
           const elapsedSeconds = (Date.now() - parseInt(storedStartTime, 10)) / 1000;
-          const initialTimeLeft = response.data.time_limit * 60 - elapsedSeconds;
-          console.log(initialTimeLeft)
+          const initialTimeLeft = detailsResponse.data.time_limit * 60 - elapsedSeconds;
           setTimeLeft(initialTimeLeft > 0 ? initialTimeLeft : 0);
           setIsChallengeStarted(initialTimeLeft > 0);
         }
       } catch (err) {
         console.error("Error fetching challenge:", err);
-        setError("Failed to load challenge details.");
       }
     };
-
     fetchChallengeDetails();
   }, [id]);
-
-  // useEffect(()=> {
-  //   const api= new ApiHelper(BASE_URL);
-  //   try {
-  //     const response= api.get(API_CHALLENGE_CHECK_CACHE, {
-  //       challenge_id: challengeId,
-  //       generatedToken: localStorage.getItem("accessToken")
-  //     })
-      
-      
-  //   } catch (error) {
-      
-  //   }
-  // })
 
   useEffect(() => {
     if (isChallengeStarted && timeLeft > 0) {
@@ -97,6 +87,7 @@ const ChallengeDetail = () => {
       if (response.success) {
         const startTime = Date.now();
         localStorage.setItem(`challenge_${challengeId}_startTime`, startTime);
+        setUrl(response.data.url);
         setTimeLeft(timeLimit * 60);
         setShowTimeUpAlert(false);
         setIsChallengeStarted(true);
@@ -134,24 +125,15 @@ const ChallengeDetail = () => {
   const handleSubmitFlag = async () => {
     setIsSubmittingFlag(true);
     setSubmissionError(null);
-    const api= new ApiHelper(BASE_URL)
+    const api = new ApiHelper(BASE_URL)
     try {
-      const sessionCookie = Cookies.get('session');  
-    if (sessionCookie) {
-  console.log('Session cookie:', sessionCookie);
-} else {
-  console.log('Session cookie not found');
-}
       const data = {
         challenge_id: challengeId,
         submission: answer,
         generatedToken: localStorage.getItem("accessToken")
-        
-      }; 
+
+      };
       const response = await api.postForm(SUBMIT_FLAG, data)
-      // const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-      //console.log(generatedToken)
-      console.log(response)
       if (response?.data.data.status === "correct") {
         alert(`${response.data.data.message}`);
       } else if (response?.data.data.status === "already_solved") {
@@ -184,7 +166,6 @@ const ChallengeDetail = () => {
     }
     setIsSubmitted(true);
     setError("");
-    console.log("Answer submitted:", answer);
   };
 
   return (
@@ -247,7 +228,7 @@ const ChallengeDetail = () => {
               </div>
 
               <button
-              onClick={handleSubmitFlag}
+                onClick={handleSubmitFlag}
                 type="submit"
                 className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${isSubmitted || (challenge?.require_deploy && !isChallengeStarted)
                   ? "bg-theme-color-neutral cursor-not-allowed"
@@ -266,7 +247,7 @@ const ChallengeDetail = () => {
               </button>
 
               {/* Nút Start Challenge chỉ hiển thị nếu require_deploy là true */}
-              {challenge && challenge.require_deploy (
+              {challenge && challenge.require_deploy && (
                 <button
                   type="button"
                   onClick={isChallengeStarted ? handleStopChallenge : handleStartChallenge}
