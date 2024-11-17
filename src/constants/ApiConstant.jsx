@@ -5,6 +5,7 @@ export const LOGIN_PATH = '/api/login-contestant'
 
 //Cache
 export const API_CHALLENGGE_GET_CACHE = "/api/challenge/check_cache"
+export const API_CHALLENGE_CHECK_STATUS_ATTEMPT= '/api/attempt/check_cache'
 
 export const GET_CHALLENGE_CATEGORIES_PATH = '/api/challenge/by-topic'
 export const GET_CHALLENGE_LIST_PATH = '/api/challenge/list_challenge/'

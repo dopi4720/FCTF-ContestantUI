@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
-import { API_CHALLEGE_START, API_CHALLENGE_STOP, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG, API_CHALLENGGE_GET_CACHE } from "../../constants/ApiConstant";
+import { API_CHALLEGE_START, API_CHALLENGE_CHECK_STATUS_ATTEMPT, API_CHALLENGE_STOP, API_CHALLENGGE_GET_CACHE, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
 
 const ChallengeDetail = () => {
@@ -19,6 +19,51 @@ const ChallengeDetail = () => {
   const [isSubmittingFlag, setIsSubmittingFlag] = useState(false);
   const [submissionError, setSubmissionError] = useState(null);
   const [url, setUrl] = useState(null);
+  const [selectedHint, setSelectedHint] = useState(null);
+  const [modalMessage, setModalMessage] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTimeOut, setisTimeOut]= useState(false)
+
+  
+  const hints = [
+    {
+      id: 1,
+      title: "Approach Hint",
+      detail: "Consider using a 2D dynamic programming table to store intermediate results."
+    },
+    {
+      id: 2,
+      title: "Time Complexity Hint",
+      detail: "The optimal solution should have O(m*n) time complexity where m and n are lengths of input strings."
+    },
+    {
+      id: 3,
+      title: "Base Case Hint",
+      detail: "Start with empty strings as your base case in the DP solution."
+    }
+  ];
+
+  const Modal = ({ isOpen, message, onClose }) => {
+    if (!isOpen) return null;
+  
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+          <p className="text-lg mb-4">{message}</p>
+          <button 
+            onClick={onClose} 
+            className="px-4 py-2 bg-theme-color-primary text-white rounded-lg hover:bg-theme-color-primary-dark"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const handleHintClick = (hintId) => {
+    setSelectedHint(selectedHint === hintId ? null : hintId);
+  };
 
   useEffect(() => {
     const fetchChallengeDetails = async () => {
@@ -29,13 +74,21 @@ const ChallengeDetail = () => {
         setTimeLimit(detailsResponse.data.time_limit || null);
 
         if (detailsResponse.data.require_deploy) {
-          const cacheResponse = await api.postForm(API_CHALLENGGE_GET_CACHE, {
-            challenge_id: detailsResponse.data.id,
-            generatedToken: localStorage.getItem("accessToken")
+            const cacheResponse = await api.postForm(API_CHALLENGGE_GET_CACHE, {
+              challenge_id: detailsResponse.data.id,
+              generatedToken: localStorage.getItem("accessToken")
           });
           // Handle cache data if needed
         }
-
+        const cache_attempt_response= await api.postForm(API_CHALLENGE_CHECK_STATUS_ATTEMPT, {
+          challenge_id: detailsResponse.data.id,
+          generatedToken: localStorage.getItem("accessToken")
+        });
+        if(cache_attempt_response.data.status === 'Submitted'){
+          setIsSubmitted(true)
+        }else{
+          setIsSubmitted(false)
+        }
         const storedStartTime = localStorage.getItem(`challenge_${challengeId}_startTime`);
         if (storedStartTime && detailsResponse.data.time_limit) {
           const elapsedSeconds = (Date.now() - parseInt(storedStartTime, 10)) / 1000;
@@ -57,6 +110,7 @@ const ChallengeDetail = () => {
           if (prevTime <= 1) {
             clearInterval(timerRef.current);
             setShowTimeUpAlert(true);
+            setisTimeOut(true)
             return 0;
           }
           return prevTime - 1;
@@ -87,11 +141,18 @@ const ChallengeDetail = () => {
       if (response.success) {
         const startTime = Date.now();
         localStorage.setItem(`challenge_${challengeId}_startTime`, startTime);
-        setUrl(response.data.url);
+        setUrl(response.challenge_url);
         setTimeLeft(timeLimit * 60);
         setShowTimeUpAlert(false);
         setIsChallengeStarted(true);
         setIsSubmitted(false);
+
+        if (response.challenge_url) {
+          window.open(response.challenge_url, "_blank");
+        } else {
+          console.error("No URL provided in the response");
+        }
+
       } else {
         console.error("Failed to start challenge:", response.error || "Unknown error");
       }
@@ -114,7 +175,11 @@ const ChallengeDetail = () => {
         setTimeLeft(null); // Reset the timer to null
         localStorage.removeItem(`challenge_${challengeId}_startTime`);
         clearInterval(timerRef.current); // Clear the timer interval immediately
+        setModalMessage("Challenge stopped successfully.");
+        setIsModalOpen(true); 
       } else {
+        setModalMessage("Fail to stop challenge! Try Again");
+        setIsModalOpen(true);
         console.error("Failed to stop challenge:", response.error || "Unknown error");
       }
     } catch (err) {
@@ -131,17 +196,23 @@ const ChallengeDetail = () => {
         challenge_id: challengeId,
         submission: answer,
         generatedToken: localStorage.getItem("accessToken")
-
       };
       const response = await api.postForm(SUBMIT_FLAG, data)
-      if (response?.data.data.status === "correct") {
-        alert(`${response.data.data.message}`);
-      } else if (response?.data.data.status === "already_solved") {
-        alert(`${response.data.data.message}`);
-      } else {
-        setSubmissionError(response?.data?.data?.message || "Incorrect flag");
-        alert(`${response?.data.data.message}`);
+      if (response?.data.status === "correct") {
+        setModalMessage(response.data.message);
+      } else if (response?.data.status === "already_solved") {
+        setModalMessage(response.data.message || "Solved");
+      } else if(response?.data.status==="ratelimited"){
+        setModalMessage(response?.data.message)
+      } else if(response?.data.status==="Incorrect"
+        && response?.data.message.contains("You have")){
+        setModalMessage("Your team have zero attempts left for this challenge")
       }
+      else {
+        setSubmissionError(response?.data?.message || "Incorrect flag");
+        setModalMessage(response?.data.message || "Incorrect flag");
+      } 
+      setIsModalOpen(true);
     } catch (error) {
       setSubmissionError("Error submitting flag.");
       console.error("Error submitting flag:", error);
@@ -164,7 +235,7 @@ const ChallengeDetail = () => {
       setError("Please enter your answer");
       return;
     }
-    setIsSubmitted(true);
+    setIsSubmitted(false);
     setError("");
   };
 
@@ -185,7 +256,11 @@ const ChallengeDetail = () => {
                   </p>
                   <div className="bg-neutral-low p-4 rounded-md">
                     <h2 className="text-xl font-semibold mb-4">Example:</h2>
-                    <pre className="bg-white p-4 rounded-md">{challenge.description}</pre>
+                    <div className="bg-white p-4 rounded-md overflow-y-auto max-h-96">
+                      <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
+                        {challenge.description}
+                      </pre>
+                    </div>
                   </div>
                 </>
               ) : (
@@ -208,7 +283,29 @@ const ChallengeDetail = () => {
                 <span>Time is up!</span>
               </div>
             )}
-
+            {/* Updated Hints Section */}
+            <div className="space-y-2 mb-4">
+                <h3 className="font-medium text-theme-color-neutral-content mb-3">Available Hints:</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {hints.map((hint) => (
+                    <div key={hint.id} className="relative">
+                      <button
+                        onClick={() => handleHintClick(hint.id)}
+                        className="w-full h-16 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center font-medium text-theme-color-primary hover:bg-gray-50"
+                        type="button"
+                      >
+                        Hint {hint.id}
+                      </button>
+                      {selectedHint === hint.id && (
+                        <div className="absolute top-full left-0 w-[300px] mt-2 p-4 bg-white rounded-lg shadow-xl border border-gray-100 z-10 transition-all duration-300 transform">
+                          <h4 className="font-semibold text-theme-color-primary mb-2">{hint.title}</h4>
+                          <p className="text-sm text-gray-600">{hint.detail}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="answer" className="block text-theme-color-neutral-content font-medium mb-2">
@@ -226,7 +323,7 @@ const ChallengeDetail = () => {
                 />
                 {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
               </div>
-
+              
               <button
                 onClick={handleSubmitFlag}
                 type="submit"
@@ -234,7 +331,7 @@ const ChallengeDetail = () => {
                   ? "bg-theme-color-neutral cursor-not-allowed"
                   : "bg-theme-color-primary hover:bg-theme-color-primary-dark text-white"
                   }`}
-                disabled={isSubmitted || (challenge?.require_deploy && !isChallengeStarted)}
+                disabled={isSubmitted || (challenge?.require_deploy && !isChallengeStarted) || isTimeOut }
               >
                 {isSubmitted ? (
                   <>
@@ -245,6 +342,11 @@ const ChallengeDetail = () => {
                   "Submit Answer"
                 )}
               </button>
+              <Modal
+        isOpen={isModalOpen}
+        message={modalMessage}
+        onClose={() => setIsModalOpen(false)}
+      />
 
               {/* Nút Start Challenge chỉ hiển thị nếu require_deploy là true */}
               {challenge && challenge.require_deploy && (
