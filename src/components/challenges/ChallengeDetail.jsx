@@ -100,12 +100,11 @@ const ChallengeDetail = () => {
   const handleHintClick = async (hintId) => {
     try {
       const response = await HintUnlocks(hintId);
-      console.log(response)
+      const hintDetailsResponse = await FetchHintDetails(hintId);
       if (response?.success) {
         // Fetch hint details upon successful unlock
-        const hintDetailsResponse = await FetchHintDetails(hintId);
         if (hintDetailsResponse?.data) {
-          setModalMessage(hintDetailsResponse.data.content || "Hint details loaded successfully!");
+          setModalMessage(`${hintDetailsResponse.data.content}` `Hint cost: ${hintDetailsResponse.data.cost}` || "Hint details loaded successfully!");
           setHint(hintDetailsResponse.data);
         } else {
           setModalMessage("Unable to fetch hint details.");
@@ -113,7 +112,7 @@ const ChallengeDetail = () => {
       } else {
         if (response.errors?.score) {
           const errorMessage = response.errors.score;
-          setModalMessage(errorMessage);
+          setModalMessage(`${errorMessage} Hint cost: ${hintDetailsResponse.data.cost} `);
         } else if (response.errors?.target) {
           const errorMessage = response.errors.target;
           setModalMessage(errorMessage);
@@ -249,8 +248,8 @@ const ChallengeDetail = () => {
         setModalMessage(response.data.message || "Solved");
       } else if(response?.data.status==="ratelimited"){
         setModalMessage(response?.data.message)
-      } else if(response?.data.status==="Incorrect"
-        && response?.data.message.contains("You have")){
+      } else if(response?.status_code){
+        console.log('Hello')
         setModalMessage("Your team have zero attempts left for this challenge")
       }
       else {
@@ -404,18 +403,17 @@ const ChallengeDetail = () => {
         message={modalMessage}
         onClose={() => setIsModalOpen(false)}
       />
-
-              {/* Nút Start Challenge chỉ hiển thị nếu require_deploy là true */}
+            {/* Nút Start Challenge chỉ hiển thị nếu require_deploy là true */}
               {challenge && (
                 <button
                   type="button"
-                  onClick={isChallengeStarted ? handleStopChallenge : handleStartChallenge}
+                  onClick={isChallengeStarted && challenge.require_deploy ? handleStopChallenge : handleStartChallenge}
                   className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${isChallengeStarted
                     ? "bg-red-600 hover:bg-red-700 text-white"
                     : "bg-green-600 hover:bg-green-700 text-white"
                     }`}
                 >
-                  {isChallengeStarted ? "Stop Challenge" : "Start Challenge"}
+                  {isChallengeStarted && challenge.require_deploy ? "Stop Challenge" : "Start Challenge"}
                 </button>
               )}
             </form>
