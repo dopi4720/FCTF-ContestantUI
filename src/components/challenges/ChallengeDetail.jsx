@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
-import { API_CHALLEGE_START, API_CHALLENGE_CHECK_STATUS_ATTEMPT, API_CHALLENGE_STOP, API_CHALLENGGE_GET_CACHE, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
+import { API_CHALLEGE_START, API_CHALLENGE_CHECK_STATUS_ATTEMPT, API_CHALLENGE_STOP, API_CHALLENGGE_GET_CACHE, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
 
 const ChallengeDetail = () => {
@@ -23,25 +23,46 @@ const ChallengeDetail = () => {
   const [modalMessage, setModalMessage] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTimeOut, setisTimeOut]= useState(false)
-
+  const [hints, setHints]= useState([])
+  const [unlockHints, setUnlockHints]= useState([])
   
-  const hints = [
-    {
-      id: 1,
-      title: "Approach Hint",
-      detail: "Consider using a 2D dynamic programming table to store intermediate results."
-    },
-    {
-      id: 2,
-      title: "Time Complexity Hint",
-      detail: "The optimal solution should have O(m*n) time complexity where m and n are lengths of input strings."
-    },
-    {
-      id: 3,
-      title: "Base Case Hint",
-      detail: "Start with empty strings as your base case in the DP solution."
+  const fetchHints = async () => {
+    const api = new ApiHelper(BASE_URL);
+    try {
+      const response = await api.get(`${APi_GET_CHALLENGES_HINTS}/${challengeId}/all`);
+      if (response.status==='success') {
+        const fetchedHintData= response.data.hints
+        setHints(fetchedHintData || []); 
+      } else {
+        console.error("Failed to fetch hints:", response.error || "Unknown error");
+      }
+    } catch (error) {
+      console.error("Error fetching hints:", error);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchHints();
+  }, [challengeId]);
+
+  const HintUnlocks= async (hintId)=>{
+    const api= new ApiHelper(BASE_URL);
+    try {
+      const response = await api.post(`${API_UNLOCK_HINTS}`, {
+        type:'hints',
+        target: hintId
+      })
+      if(response.status){
+        setUnlockHints((prev) => [...prev, hintId]);
+      }else{
+        setModalMessage(response.errors)
+        setIsModalOpen(true)
+      }
+    } catch (error) {
+      console.error('Fail to unlock hints', error)
+      
+    }
+  }
 
   const Modal = ({ isOpen, message, onClose }) => {
     if (!isOpen) return null;
@@ -61,9 +82,18 @@ const ChallengeDetail = () => {
     );
   };
 
-  const handleHintClick = (hintId) => {
-    setSelectedHint(selectedHint === hintId ? null : hintId);
-  };
+  const handleHintClick = async (hintId) => {
+    if (!unlockHints.includes(hintId)) {
+      await HintUnlocks(hintId); // Unlock the hint
+    }
+  
+    // Find the hint content to display
+    const unlockedHint = hints.find((hint) => hint.id === hintId);
+    if (unlockedHint) {
+      setModalMessage(unlockedHint.content); // Show the hint content in the modal
+      setIsModalOpen(true);
+    }
+  }
 
   useEffect(() => {
     const fetchChallengeDetails = async () => {
@@ -296,10 +326,16 @@ const ChallengeDetail = () => {
                       >
                         Hint {hint.id}
                       </button>
-                      {selectedHint === hint.id && (
-                        <div className="absolute top-full left-0 w-[300px] mt-2 p-4 bg-white rounded-lg shadow-xl border border-gray-100 z-10 transition-all duration-300 transform">
-                          <h4 className="font-semibold text-theme-color-primary mb-2">{hint.title}</h4>
-                          <p className="text-sm text-gray-600">{hint.detail}</p>
+                      {selectedHint === hint.id && unlockHints.includes(hint.id) && (
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-[300px] mt-2 p-4 bg-white rounded-lg shadow-xl border border-gray-100 z-10 transition-all duration-300 transform" style={{
+                          maxWidth: "300px",
+                          overflow: "hidden",
+                          whiteSpace: "normal",
+                          wordWrap: "break-word",
+                        }}>
+                          <h4 className="font-semibold text-theme-color-primary mb-2">{hint.type}</h4>
+                          <p className="text-sm text-gray-600">{hint.content}</p>
+
                         </div>
                       )}
                     </div>
