@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
-import { API_CHALLEGE_START, API_CHALLENGE_CHECK_STATUS_ATTEMPT, API_CHALLENGE_STOP, API_CHALLENGGE_GET_CACHE, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
+import { API_CHALLEGE_START, API_CHALLENGE_STOP, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
 
 const ChallengeDetail = () => {
@@ -25,13 +25,15 @@ const ChallengeDetail = () => {
   const [isTimeOut, setisTimeOut]= useState(false)
   const [hints, setHints]= useState([])
   const [unlockHints, setUnlockHints]= useState([])
+  const [hint, setHint]= useState(null)
+  const [fileLink, setFileLink]= useState(null)
   
   const fetchHints = async () => {
     const api = new ApiHelper(BASE_URL);
     try {
       const response = await api.get(`${APi_GET_CHALLENGES_HINTS}/${challengeId}/all`);
-      if (response.status==='success') {
-        const fetchedHintData= response.data.hints
+      if (response.hints) {
+        const fetchedHintData= response.hints.hints
         setHints(fetchedHintData || []); 
       } else {
         console.error("Failed to fetch hints:", response.error || "Unknown error");
@@ -45,22 +47,19 @@ const ChallengeDetail = () => {
     fetchHints();
   }, [challengeId]);
 
-  const HintUnlocks= async (hintId)=>{
-    const api= new ApiHelper(BASE_URL);
-    try {
-      const response = await api.post(`${API_UNLOCK_HINTS}`, {
-        type:'hints',
-        target: hintId
-      })
-      if(response.status){
-        setUnlockHints((prev) => [...prev, hintId]);
+  const FetchHintDetails= async(hintId) =>{
+    try{
+      const api= new ApiHelper(BASE_URL);
+      const response= await api.get(`${APi_GET_CHALLENGES_HINTS}/${hintId}`)
+      if(response.success){
+        const hintDetails= response.data
+        setHint(hintDetails || [])
+        return response
       }else{
-        setModalMessage(response.errors)
-        setIsModalOpen(true)
+        console.error("Failed to fetch hints:", response.error || "Unknown error");
       }
-    } catch (error) {
-      console.error('Fail to unlock hints', error)
-      
+    }catch(error){
+      console.error("Error fetching hints:", error);
     }
   }
 
@@ -82,18 +81,54 @@ const ChallengeDetail = () => {
     );
   };
 
+  const HintUnlocks = async (hintId) => {
+    const api = new ApiHelper(BASE_URL);
+    try {
+      const response = await api.post(`${API_UNLOCK_HINTS}`, {
+        type: 'hints',
+        target: hintId,
+      });
+      if (response.success) {
+        setUnlockHints((prev) => [...prev, hintId]);
+      }
+      return response; // Return the response for further evaluation
+    } catch (error) {
+      console.error('Failed to unlock hint:', error);
+      return { success: false, errors: error.response.data.errors };
+    }
+  };
   const handleHintClick = async (hintId) => {
-    if (!unlockHints.includes(hintId)) {
-      await HintUnlocks(hintId); // Unlock the hint
+    try {
+      const response = await HintUnlocks(hintId);
+      console.log(response)
+      if (response?.success) {
+        // Fetch hint details upon successful unlock
+        const hintDetailsResponse = await FetchHintDetails(hintId);
+        if (hintDetailsResponse?.data) {
+          setModalMessage(hintDetailsResponse.data.content || "Hint details loaded successfully!");
+          setHint(hintDetailsResponse.data);
+        } else {
+          setModalMessage("Unable to fetch hint details.");
+        }
+      } else {
+        if (response.errors?.score) {
+          const errorMessage = response.errors.score;
+          setModalMessage(errorMessage);
+        } else if (response.errors?.target) {
+          const errorMessage = response.errors.target;
+          setModalMessage(errorMessage);
+        } else {
+          // Default error message for other cases
+          setModalMessage("Failed to unlock hint. Try again.");
+        }
+      }
+    } catch (error) {
+      setModalMessage("An error occurred while processing your request.");
+      console.error('Error in handleHintClick:', error);
+    } finally {
+      setIsModalOpen(true); // Ensure the modal opens
     }
-  
-    // Find the hint content to display
-    const unlockedHint = hints.find((hint) => hint.id === hintId);
-    if (unlockedHint) {
-      setModalMessage(unlockedHint.content); // Show the hint content in the modal
-      setIsModalOpen(true);
-    }
-  }
+  };
 
   useEffect(() => {
     const fetchChallengeDetails = async () => {
@@ -102,23 +137,6 @@ const ChallengeDetail = () => {
         const detailsResponse = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
         setChallenge(detailsResponse.data);
         setTimeLimit(detailsResponse.data.time_limit || null);
-
-        if (detailsResponse.data.require_deploy) {
-            const cacheResponse = await api.postForm(API_CHALLENGGE_GET_CACHE, {
-              challenge_id: detailsResponse.data.id,
-              generatedToken: localStorage.getItem("accessToken")
-          });
-          // Handle cache data if needed
-        }
-        const cache_attempt_response= await api.postForm(API_CHALLENGE_CHECK_STATUS_ATTEMPT, {
-          challenge_id: detailsResponse.data.id,
-          generatedToken: localStorage.getItem("accessToken")
-        });
-        if(cache_attempt_response.data.status === 'Submitted'){
-          setIsSubmitted(true)
-        }else{
-          setIsSubmitted(false)
-        }
         const storedStartTime = localStorage.getItem(`challenge_${challengeId}_startTime`);
         if (storedStartTime && detailsResponse.data.time_limit) {
           const elapsedSeconds = (Date.now() - parseInt(storedStartTime, 10)) / 1000;
@@ -171,7 +189,9 @@ const ChallengeDetail = () => {
       if (response.success) {
         const startTime = Date.now();
         localStorage.setItem(`challenge_${challengeId}_startTime`, startTime);
+        console.log(`Challenge url: ${response.challenge_url}`)
         setUrl(response.challenge_url);
+        setFileLink(response.data)
         setTimeLeft(timeLimit * 60);
         setShowTimeUpAlert(false);
         setIsChallengeStarted(true);
@@ -179,8 +199,6 @@ const ChallengeDetail = () => {
 
         if (response.challenge_url) {
           window.open(response.challenge_url, "_blank");
-        } else {
-          console.error("No URL provided in the response");
         }
 
       } else {
@@ -193,12 +211,9 @@ const ChallengeDetail = () => {
 
   const handleStopChallenge = async () => {
     const api = new ApiHelper(BASE_URL);
-    const generatedToken = localStorage.getItem("accessToken");
-
     try {
       const response = await api.postForm(API_CHALLENGE_STOP, {
         challenge_id: challengeId,
-        generatedToken,
       });
       if (response.message === "Challenge stopped successfully") {
         setIsChallengeStarted(false); // Stop the challenge
@@ -278,25 +293,31 @@ const ChallengeDetail = () => {
               {challenge ? challenge.name : "..."}
             </h1>
             <div className="prose max-w-none">
-              {challenge ? (
-                <>
-                  <p className="text-theme-color-neutral-content text-lg mb-6">
-                    Max attempts: {challenge.max_attempts} <br />
-                    Type: {challenge.type}
-                  </p>
-                  <div className="bg-neutral-low p-4 rounded-md">
-                    <h2 className="text-xl font-semibold mb-4">Example:</h2>
-                    <div className="bg-white p-4 rounded-md overflow-y-auto max-h-96">
-                      <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
-                        {challenge.description}
-                      </pre>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <p>Loading challenge details...</p>
-              )}
-            </div>
+            {challenge ? (
+            <>
+      <p className="text-theme-color-neutral-content text-lg mb-6">
+        Max attempts: {challenge.max_attempts} <br />
+        Type: {challenge.type}
+      </p>
+      <div className="bg-neutral-low p-4 rounded-md">
+        <div className="bg-white p-4 rounded-md overflow-y-auto max-h-96">
+          <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
+            {challenge.description}
+          </pre>
+
+          {!challenge.require_deploy && (
+            <>
+              <h4>Click Start Challenge to download the file needs</h4>
+              {isChallengeStarted && <h5>{fileLink}</h5>}
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  ) : (
+    <p>Loading challenge details...</p>
+  )}
+</div>
           </div>
 
           <div className="lg:w-[30%] bg-theme-color-base p-8">
@@ -318,15 +339,15 @@ const ChallengeDetail = () => {
                 <h3 className="font-medium text-theme-color-neutral-content mb-3">Available Hints:</h3>
                 <div className="grid grid-cols-3 gap-2">
                   {hints.map((hint) => (
-                    <div key={hint.id} className="relative">
+                    <div key={hint} className="relative">
                       <button
-                        onClick={() => handleHintClick(hint.id)}
+                        onClick={() => handleHintClick(hint)}
                         className="w-full h-16 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center font-medium text-theme-color-primary hover:bg-gray-50"
                         type="button"
                       >
-                        Hint {hint.id}
+                        Hint {hint}
                       </button>
-                      {selectedHint === hint.id && unlockHints.includes(hint.id) && (
+                      {selectedHint === hint.id  && (
                         <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-[300px] mt-2 p-4 bg-white rounded-lg shadow-xl border border-gray-100 z-10 transition-all duration-300 transform" style={{
                           maxWidth: "300px",
                           overflow: "hidden",
@@ -385,7 +406,7 @@ const ChallengeDetail = () => {
       />
 
               {/* Nút Start Challenge chỉ hiển thị nếu require_deploy là true */}
-              {challenge && challenge.require_deploy && (
+              {challenge && (
                 <button
                   type="button"
                   onClick={isChallengeStarted ? handleStopChallenge : handleStartChallenge}
