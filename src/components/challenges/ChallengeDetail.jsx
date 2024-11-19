@@ -135,7 +135,8 @@ const ChallengeDetail = () => {
       try {
         const detailsResponse = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
         setChallenge(detailsResponse.data);
-        setTimeLimit(detailsResponse.data.time_limit || null);
+        if(detailsResponse.data.time_limit!== -1){
+          setTimeLimit(detailsResponse.data.time_limit || null);
         const storedStartTime = localStorage.getItem(`challenge_${challengeId}_startTime`);
         if (storedStartTime && detailsResponse.data.time_limit) {
           const elapsedSeconds = (Date.now() - parseInt(storedStartTime, 10)) / 1000;
@@ -143,6 +144,10 @@ const ChallengeDetail = () => {
           setTimeLeft(initialTimeLeft > 0 ? initialTimeLeft : 0);
           setIsChallengeStarted(initialTimeLeft > 0);
         }
+        }else{
+          setTimeLimit(null)
+        }
+        
       } catch (err) {
         console.error("Error fetching challenge:", err);
       }
@@ -191,12 +196,15 @@ const ChallengeDetail = () => {
         console.log(`Challenge url: ${response.challenge_url}`)
         setUrl(response.challenge_url);
         setFileLink(response.data)
+        
         setTimeLeft(timeLimit * 60);
         setShowTimeUpAlert(false);
         setIsChallengeStarted(true);
         setIsSubmitted(false);
 
         if (response.challenge_url) {
+          setModalMessage(`Your connection info is: ${url} `)
+          setIsModalOpen(true)
           window.open(response.challenge_url, "_blank");
         }
 
@@ -310,6 +318,10 @@ const ChallengeDetail = () => {
               {isChallengeStarted && <h5>{fileLink}</h5>}
             </>
           )}
+          <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
+            Your coneection info is: {challenge.challenge_url}
+          </pre>
+
         </div>
       </div>
     </>
