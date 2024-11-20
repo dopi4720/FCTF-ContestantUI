@@ -32,3 +32,6 @@ export const API_TICKET_CREATE_BY_USER= '/api/sendticket'
 export const API_CHALLEGE_START = "/api/challenge/start"
 export const API_CHALLENGE_STOP = "/api/challenge/stop"
 export const API_CHALLENGE_CHECK_CACHE= "/api/challenge/check_cache"
+
+//dowload files
+export const API_FILE_DOWLOAD = "/api/files"
