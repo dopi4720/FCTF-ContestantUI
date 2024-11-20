@@ -100,22 +100,14 @@ const ChallengeDetail = () => {
     }
   };
 
-  const handleHintClick = async (hintId) => {
+  const handleUnlockHintClick = async (hintId) => {
     try {
       const response = await HintUnlocks(hintId);
       //Nếu lỗi doạn này khi deploy, check lại API (quyền)
       if (response?.success) {
         // Fetch hint details upon successful unlock
-        const hintDetailsResponse = await FetchHintDetails(hintId);
-        if (hintDetailsResponse?.data) {
-          setModalMessage(
-            `Hint: ${hintDetailsResponse.data.content || "Details not available"} 
-             Hint cost: ${hintDetailsResponse.data.cost || "N/A"}`
-          );
-          setHint(hintDetailsResponse.data);
-        } else {
-          setModalMessage("Unable to fetch hint details.");
-        }
+        setModalMessage("Unlock success")
+        setIsModalOpen(true)
       } else {
         if (response.errors?.score) {
           const errorMessage = response.errors.score;
@@ -125,18 +117,6 @@ const ChallengeDetail = () => {
           const errorMessage = response.errors.target;
           setModalMessage(errorMessage);
           setIsModalOpen(true); // Show the first modal
-          setTimeout(async () => {
-
-            const hintDetailsResponse = await FetchHintDetails(hintId);
-            if (hintDetailsResponse?.data) {
-              setModalMessage(
-                `Hint: ${hintDetailsResponse.data.content || "Details not available"} 
-                 Hint cost: ${hintDetailsResponse.data.cost || "N/A"}`
-              );
-            } else {
-              setModalMessage("Unable to fetch hint details.");
-            }
-          }, 3000); // Wait 3 seconds before fetching details
         } else {
           // Default error message for other cases
           setModalMessage("Failed to unlock hint. Try again.");
@@ -196,6 +176,20 @@ const ChallengeDetail = () => {
 
     return () => clearInterval(timerRef.current);
   }, [isChallengeStarted, timeLeft]);
+
+  const handeHintDetailClick = async (hintId) => {
+    const hintDetailsResponse = await FetchHintDetails(hintId);
+    if (hintDetailsResponse?.data) {
+      setModalMessage(
+        `Hint: ${hintDetailsResponse.data.content || "Details not available"} `
+      );
+      setIsModalOpen(true)
+    } else {
+      setModalMessage("Unable to fetch hint details.");
+      setIsModalOpen(true)
+    }
+  }
+
 
   const handleStartChallenge = async () => {
     if (!challengeId) {
@@ -374,15 +368,18 @@ const ChallengeDetail = () => {
               <h3 className="font-medium text-theme-color-neutral-content mb-3">Available Hints:</h3>
               <div className="grid grid-cols-3 gap-2">
                 {hints.map((hint) => (
-                  <div key={hint.id} className="relative">
+                  <div key={hint.id}>
+                    <button type="button" className="w-full h-16 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300  items-center justify-center font-medium text-theme-color-primary hover:bg-gray-5" onClick={() => handeHintDetailClick(hint.id)}>
+                      <div className="text-center">Hint: {hint.id}</div>
+                      <div className="text-center">Cost: {hint.cost}</div>
+                    </button>
                     <button
-                      onClick={() => handleHintClick(hint.id)}
+                      onClick={() => handleUnlockHintClick(hint.id)}
                       className="w-full h-16 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center font-medium text-theme-color-primary hover:bg-gray-50"
                       type="button"
                     >
-                      Hint {hint.id}
+                      Unlock
                     </button>
-
                   </div>
                 ))}
               </div>
