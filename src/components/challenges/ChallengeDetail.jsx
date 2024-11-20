@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { API_CHALLEGE_START, API_FILE_DOWLOAD, API_CHALLENGE_STOP, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
 import fileDownload from 'react-file-download';
+import { FaDownload } from 'react-icons/fa';
 
 const ChallengeDetail = () => {
   const { id } = useParams();
@@ -352,7 +353,11 @@ const ChallengeDetail = () => {
                         <ul>
                           {challenge.files.map((file, index) => (
                             <li key={index}>
-                              <button onClick={()=>handleDowloadFiles(file)}>
+                              <button
+                                onClick={() => handleDowloadFiles(file)}
+                                className="flex my-2 items-center bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <FaDownload className="mr-2" /> {/* Thêm icon */}
                                 {getFileName(file)}
                               </button>
                             </li>
