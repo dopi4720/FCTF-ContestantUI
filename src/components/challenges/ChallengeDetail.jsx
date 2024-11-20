@@ -136,6 +136,7 @@ const ChallengeDetail = () => {
       try {
         const detailsResponse = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
         setChallenge(detailsResponse.data);
+        setIsSubmitted(detailsResponse.data.solve_by_myteam)
         if (detailsResponse.data.time_limit !== -1) {
           setTimeLimit(detailsResponse.data.time_limit || null);
           const storedStartTime = localStorage.getItem(`challenge_${challengeId}_startTime`);
@@ -336,9 +337,11 @@ const ChallengeDetail = () => {
                           {isChallengeStarted && <h5>{fileLink}</h5>}
                         </>
                       )}
-                      <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
-                        Your connection info is: {url}
-                      </pre>
+                      {url && (
+                        <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
+                          Your connection info is: {url}
+                        </pre>
+                      )}
 
                     </div>
                   </div>
@@ -426,7 +429,7 @@ const ChallengeDetail = () => {
                 onClose={() => setIsModalOpen(false)}
               />
               {/* Nút Start Challenge chỉ hiển thị nếu require_deploy là true */}
-              {challenge && !isChallengeStarted && (
+              {challenge && !isChallengeStarted && !isSubmitted && (
                 <button
                   type="button"
                   onClick={handleStartChallenge}
