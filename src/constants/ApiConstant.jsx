@@ -1,4 +1,4 @@
-export const BASE_URL = 'https://admin.fctf.site';
+export const BASE_URL = 'http://127.0.0.1:4000';
 
 export const LOGIN_PATH = '/api/login-contestant'
 export const USER_DETAILS= '/api/v1/users'
