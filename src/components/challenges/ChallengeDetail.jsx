@@ -323,6 +323,7 @@ const ChallengeDetail = () => {
                 <>
                   <p className="text-theme-color-neutral-content text-lg mb-6">
                     Max attempts: {challenge.max_attempts} <br />
+                    Submission: {challenge.attemps} times <br />
                     Type: {challenge.type}
                   </p>
                   <div className="bg-neutral-low p-4 rounded-md">
