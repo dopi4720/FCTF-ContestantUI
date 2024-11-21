@@ -130,7 +130,7 @@ const ChallengeDetail = () => {
       } else {
         if (response.errors?.score) {
           const errorMessage = response.errors.score;
-          setModalMessage(`${errorMessage} Please Wait 3 Seconds`);
+          setModalMessage(`${errorMessage}`);
         } else if (response.errors?.target) {
           // Show error and fetch hint details
           const errorMessage = response.errors.target;
@@ -260,7 +260,7 @@ const ChallengeDetail = () => {
       const response = await api.postForm(API_CHALLENGE_STOP, {
         challenge_id: challengeId,
       });
-      if (response.message === "Challenge stopped successfully") {
+      if (response.isSuccess) {
         setIsChallengeStarted(false); 
         setTimeLeft(null); 
         localStorage.removeItem(`challenge_${challengeId}_startTime`);
@@ -410,8 +410,8 @@ const ChallengeDetail = () => {
                 {hints.map((hint) => (
                   <div key={hint.id}>
                     <button type="button" className="w-full h-16 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300  items-center justify-center font-medium text-theme-color-primary hover:bg-gray-5" onClick={() => handeHintDetailClick(hint.id)}>
-                      <div className="text-center">Hint: {hint.id}</div>
-                      <div className="text-center">Cost: {hint.cost}</div>
+                      <div className="text-center">Hint</div>
+                      <div className="text-center">{hint.cost} Points</div>
                     </button>
                     <button
                       onClick={() => handleUnlockHintClick(hint.id)}
@@ -466,24 +466,31 @@ const ChallengeDetail = () => {
                 onClose={() => setIsModalOpen(false)}
               />
             {/* Nút Start Challenge chỉ hiển thị nếu require_deploy là true */}
-          {challenge && challenge.require_deploy && !isChallengeStarted && !isSubmitted && (
-            <button
-                type="button"
-                onClick={handleStartChallenge}
-                disabled={isStarting} // Disable button while starting
-                className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
-                isStarting ? "bg-gray-500 text-white cursor-not-allowed" : isChallengeStarted 
-                ? "bg-red-600 hover:bg-red-700 text-white"
-                : "bg-green-600 hover:bg-green-700 text-white"
-            }`}
-          >
-        {isStarting
-          ? "Starting..." 
-          : isChallengeStarted && challenge.require_deploy
-          ? "Stop Challenge"
-          : "Start Challenge"}
-      </button>
-        )}
+            {challenge?.require_deploy && !isChallengeStarted && !isSubmitted && (
+  <button
+    type="button"
+    onClick={handleStartChallenge}
+    disabled={isStarting} // Disable button while starting
+    className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+      isStarting
+        ? "bg-gray-500 text-white cursor-not-allowed"
+        : "bg-green-600 hover:bg-green-700 text-white"
+    }`}
+  >
+    {isStarting ? "Starting..." : "Start Challenge"}
+  </button>
+)}
+
+{/* Display the Stop Challenge button if the challenge is started and require_deploy is true */}
+{isChallengeStarted && challenge?.require_deploy && (
+  <button
+    type="button"
+    onClick={handleStopChallenge}
+    className="w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white"
+  >
+    Stop Challenge
+  </button>
+)}
             </form>
 
           </div>

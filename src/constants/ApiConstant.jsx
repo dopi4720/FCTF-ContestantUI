@@ -28,7 +28,7 @@ export const API_DETAIL_TICKET = '/api/tickets'  //details
 export const API_TICKET_CREATE_BY_USER = '/api/sendticket'
 
 export const API_CHALLEGE_START = "/api/challenge/start"
-export const API_CHALLENGE_STOP = "/api/challenge/stop"
+export const API_CHALLENGE_STOP = "/api/challenge/stop-by-user"
 export const API_CHALLENGE_CHECK_CACHE = "/api/challenge/check_cache"
 
 //User
