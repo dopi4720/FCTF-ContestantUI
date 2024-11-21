@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
-import axios from 'axios';
 import { useParams } from "react-router-dom";
 import ApiHelper from "../../utils/ApiHelper";
 import { BASE_URL, API_USER_PROFILE } from "../../constants/ApiConstant";
@@ -106,8 +105,7 @@ const UserProfile = () => {
     };
 
     return (
-
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-4 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-4 px-2 sm:px-2 lg:px-8">
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
                 {notification.message && (
                     <div
@@ -120,8 +118,8 @@ const UserProfile = () => {
                         {notification.message}
                     </div>
                 )}
-                <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">User Profile</h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">User Profile</h2>
+                <form onSubmit={handleSubmit} className="space-y-3">
                     <div>
                         <label htmlFor="username" className="block text-sm font-medium text-gray-700">
                             Username
