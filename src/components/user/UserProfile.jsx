@@ -32,7 +32,10 @@ const UserProfile = () => {
     const achievements = [
         { id: 1, title: "First Blood", description: "First to solve a challenge", type: "gold" },
         { id: 2, title: "Speed Demon", description: "Completed 5 challenges in 1 hour", type: "silver" },
-        { id: 3, title: "Master Hacker", description: "Solved all web challenges", type: "bronze" }
+        { id: 3, title: "Master Hacker", description: "Solved all web challenges", type: "bronze" },
+        { id: 4, title: "Master Hacker", description: "Solved all web challenges", type: "bronze" },
+        { id: 3, title: "Master Hacker", description: "Solved all web challenges", type: "bronze" },
+        { id: 4, title: "Master Hacker", description: "Solved all web challenges", type: "bronze" }
     ];
 
     const recentChallenges = [
@@ -51,33 +54,33 @@ const UserProfile = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Profile Card */}
                 <div className="bg-white rounded-lg shadow p-6 flex items-center justify-center">
-                   <div>
-                   <div className="flex items-center justify-center">
-                        <div class="relative w-[125px] h-[125px] overflow-hidden rounded-full group ring-1 transition-all mb-3">
-                            <img
-                                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcwhPhFEnyOzxoKysVzNiMn245tFGSEBFavA&s"
-                                alt="Profile"
-                                class="w-full h-full object-cover"
-                            />
-                        </div>
+                    <div>
+                        <div className="flex items-center justify-center">
+                            <div class="relative w-[125px] h-[125px] overflow-hidden rounded-full group ring-1 transition-all mb-3">
+                                <img
+                                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcwhPhFEnyOzxoKysVzNiMn245tFGSEBFavA&s"
+                                    alt="Profile"
+                                    class="w-full h-full object-cover"
+                                />
+                            </div>
 
-                    </div>
-                    <div className="flex items-center justify-center">
-                        <div className="text-center">
-                            <h2 className="text-xl font-bold">Khoa Điếu Cày</h2>
-                            <p className="text-gray-600">Tên team</p>
-                            <button
-                                onClick={() => setShowPasswordModal(true)}
-                                className="flex items-center text-theme-color-primary hover:text-theme-color-primary-dark"
-                            >
-                                <div class="flex items-center space-x-1">
-                                    <FaLock />
-                                    <span className="">Change Password</span>
-                                </div>
-                            </button>
+                        </div>
+                        <div className="flex items-center justify-center">
+                            <div className="text-center">
+                                <h2 className="text-xl font-bold">Khoa Điếu Cày</h2>
+                                <p className="text-gray-600">Tên team</p>
+                                <button
+                                    onClick={() => setShowPasswordModal(true)}
+                                    className="flex items-center text-theme-color-primary hover:text-theme-color-primary-dark"
+                                >
+                                    <div class="flex items-center space-x-1">
+                                        <FaLock />
+                                        <span className="">Change Password</span>
+                                    </div>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                   </div>
                 </div>
 
                 {/* Team Ranking Card */}
@@ -129,59 +132,44 @@ const UserProfile = () => {
                     </div>
                 </div>
 
-                {/* Achievements Card */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-xl font-bold mb-4">Achievements</h2>
-                    <div className="space-y-4">
-                        {achievements.map((achievement) => (
-                            <div key={achievement.id} className="flex items-center space-x-3">
-                                <FaMedal className={`text-2xl ${achievement.type === "gold" ? "text-yellow-500" : achievement.type === "silver" ? "text-gray-400" : "text-yellow-700"}`} />
-                                <div>
-                                    <h3 className="font-semibold">{achievement.title}</h3>
-                                    <p className="text-sm text-gray-600">{achievement.description}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-full">
+                    {/* Achievements Card */}
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-xl font-bold mb-4">Achievements</h2>
+                        <div className="space-y-4 grid grid-cols-1 md:grid-cols-2">
+                            {achievements.map((achievement) => (
+                                <div key={achievement.id} className="flex items-center space-x-3">
+                                    <FaMedal className={`text-2xl ${achievement.type === "gold" ? "text-yellow-500" : achievement.type === "silver" ? "text-gray-400" : "text-yellow-700"}`} />
+                                    <div>
+                                        <h3 className="font-semibold">{achievement.title}</h3>
+                                        <p className="text-sm text-gray-600">{achievement.description}</p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
 
-                {/* Recent Challenges Card */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-xl font-bold mb-4">Recent Challenges</h2>
-                    <div className="space-y-4">
-                        {recentChallenges.map((challenge, index) => (
-                            <div key={index} className="border-b pb-4">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="font-semibold">{challenge.name}</h3>
-                                    <span className={`px-2 py-1 rounded-full text-xs ${challenge.difficulty === "Easy" ? "bg-green-100 text-green-800" : challenge.difficulty === "Medium" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800"}`}>
-                                        {challenge.difficulty}
-                                    </span>
+                    {/* Recent Challenges Card */}
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-xl font-bold mb-4">Recent Challenges</h2>
+                        <div className="space-y-4">
+                            {recentChallenges.map((challenge, index) => (
+                                <div key={index} className="border-b pb-4">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="font-semibold">{challenge.name}</h3>
+                                        <span className={`px-2 py-1 rounded-full text-xs ${challenge.difficulty === "Easy" ? "bg-green-100 text-green-800" : challenge.difficulty === "Medium" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800"}`}>
+                                            {challenge.difficulty}
+                                        </span>
+                                    </div>
+                                    <div className="mt-2 bg-gray-200 rounded-full h-2">
+                                        <div
+                                            className={`h-2 rounded-full ${challenge.completed ? "bg-green-500" : "bg-theme-color-primary"}`}
+                                            style={{ width: `${challenge.progress}%` }}
+                                        ></div>
+                                    </div>
                                 </div>
-                                <div className="mt-2 bg-gray-200 rounded-full h-2">
-                                    <div
-                                        className={`h-2 rounded-full ${challenge.completed ? "bg-green-500" : "bg-theme-color-primary"}`}
-                                        style={{ width: `${challenge.progress}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Upcoming Events Card */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold">Upcoming Events</h2>
-                        <FaCalendarAlt className="text-theme-color-primary text-2xl" />
-                    </div>
-                    <div className="space-y-4">
-                        {upcomingEvents.map((event, index) => (
-                            <div key={index} className="border-b pb-4">
-                                <h3 className="font-semibold">{event.name}</h3>
-                                <p className="text-sm text-gray-600">{event.date}</p>
-                                <p className="text-sm text-gray-600">{event.location}</p>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
