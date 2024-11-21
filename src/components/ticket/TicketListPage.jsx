@@ -12,8 +12,8 @@ const TicketList = () => {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [tickets, setTickets]= useState([])
-  const navigate= useNavigate()
+  const [tickets, setTickets] = useState([])
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -34,9 +34,9 @@ const TicketList = () => {
   }, []);
 
   const handleTicketClick = (ticketId) => {
-    navigate(`/ticket/${ticketId}`); 
+    navigate(`/ticket/${ticketId}`);
   };
-  
+
   const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -71,14 +71,16 @@ const TicketList = () => {
 
     try {
       setShowModal(false);
-      const api= new ApiHelper(BASE_URL)
-      const response= api.postForm(API_TICKET_CREATE_BY_USER, {
-        title: {title},
-        type: {type},
-        author_id: {author_id}, 
-        description: {description}
+      const api = new ApiHelper(BASE_URL);
+
+      const response = api.postForm(API_TICKET_CREATE_BY_USER, {
+        title: { title },
+        type: { type },
+        author_id: { author_id },
+        description: { description }
       })
-      if(response.status=='ok'){
+
+      if (response.status == 'ok') {
         console.log('Create successful')
       }
     } catch (err) {
@@ -162,7 +164,7 @@ const TicketList = () => {
               </div>
               <span className="capitalize">{ticket.type}</span>
               {getStatusIcon(ticket.status)}
-              
+
 
             </div>
             <h3 className="mb-2 text-lg font-semibold text-gray-800 group-hover:text-theme-color-primary">
@@ -171,7 +173,7 @@ const TicketList = () => {
             <div className="flex items-center justify-between text-sm text-gray-500">
               <span>Created: {ticket.date}</span>
               <span className="capitalize">{ticket.status.replace("_", " ")}</span>
-              
+
             </div>
           </div>
         ))}
