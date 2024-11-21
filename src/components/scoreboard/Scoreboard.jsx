@@ -74,7 +74,7 @@ const Scoreboard = () => {
                       )}
                     </div>
                   </div>
-                  <div className="text-3xl font-bold text-theme-color-base">{team.score}</div>
+                  <div className="text-xl font-bold text-theme-color-base">{team.score}</div>
                 </div>
   
                 {/* Expandable section for team members */}
