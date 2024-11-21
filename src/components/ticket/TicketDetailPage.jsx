@@ -68,7 +68,6 @@ const TicketDetailPage = () => {
                   <p className="font-medium">{ticket?.date}</p>
                 </div>
               </div>
-
               <div className="flex items-center space-x-3">
                 <FaReply className="text-theme-color-primary text-xl" />
                 <div>
@@ -93,6 +92,14 @@ const TicketDetailPage = () => {
                   {ticket?.description}
                 </p>
               </div>
+
+              <div>
+                <h2 className="text-xl font-semibold mb-2">Reply from {ticket?.replier_name}</h2>
+                <p className="text-gray-700 bg-gray-50 p-3 rounded-md min-h-[100px]">
+                  {ticket?.replier_message}
+                </p>
+              </div>
+
             </div>
           </div>
         </div>
