@@ -3,8 +3,11 @@ import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
 import { API_CHALLEGE_START, API_FILE_DOWLOAD, API_CHALLENGE_STOP, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
-import fileDownload from 'react-file-download';
+import fileDownload from 'js-file-download';
 import { FaDownload } from 'react-icons/fa';
+import { saveAs } from 'file-saver';
+
+
 
 const ChallengeDetail = () => {
   const { id } = useParams();
@@ -80,7 +83,7 @@ const ChallengeDetail = () => {
       const response = await api.get(`${BASE_URL}${filePath}`);
       let fileName = getFileName(filePath)
       // Download the file
-      fileDownload(response, fileName);
+      saveAs(`${BASE_URL}${filePath}`, fileName)
     } catch (error) {
       console.error('Error downloading file:', error);
     }
