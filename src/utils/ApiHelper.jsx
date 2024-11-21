@@ -41,6 +41,17 @@ class ApiHelper {
     }
   }
 
+  async getbyAuth(url, params = {}) {
+    try {
+      const headers = this._getAuthHeaders();
+      const response = await this.api.get(url, { params, headers });
+      return response.data;
+    } catch (error) {
+      console.error("GET request error:", error);
+      throw error;
+    }
+  }
+
   async post(url, data = {}) {
     try {
       const response = await this.api.post(url, data);
@@ -55,7 +66,7 @@ class ApiHelper {
     try {
       const formData = new FormData();
       Object.keys(data).forEach((key) => formData.append(key, data[key]));
-
+      console.log("formData", formData);
       const response = await this.api.post(url, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -64,6 +75,17 @@ class ApiHelper {
       return response.data;
     } catch (error) {
       console.error("POST Form request error:", error);
+      throw error;
+    }
+  }
+
+  async patch(url, params = {}) {
+    try {
+      const headers = this._getAuthHeaders();
+      const response = await this.api.patch(url, { params, headers });
+      return response.data;
+    } catch (error) {
+      console.error("PATCH request error:", error);
       throw error;
     }
   }

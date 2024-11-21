@@ -66,16 +66,16 @@ const TicketList = () => {
     e.preventDefault();
     try {
       setShowModal(false);
-  
+
       const api = new ApiHelper(BASE_URL);
       const ticketData = {
         title: e.target.title.value,
         type: e.target.type.value,
         description: e.target.description.value,
       };
-  
+
       const response = await api.post(API_TICKET_CREATE_BY_USER, ticketData);
-  
+
       if (response.status === 201) {
         // Success: Add the new ticket to the list
         setError(""); // Clear any previous errors
@@ -86,12 +86,12 @@ const TicketList = () => {
         // Handle different error cases
         const message = response.message || response.error || "An error occurred.";
         setError(message);
-        
+
       }
     } catch (err) {
       console.error("Error occurred:", err);
       setError("Failed to send the ticket. Please try again.");
-      
+
     }
   };
 
@@ -226,7 +226,7 @@ const TicketList = () => {
                   required
                 />
               </div>
-              
+
               <div className="mb-6">
                 <label
                   htmlFor="description"
