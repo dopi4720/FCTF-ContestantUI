@@ -3,7 +3,6 @@ import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
 import { API_CHALLEGE_START, API_FILE_DOWLOAD, API_CHALLENGE_STOP, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
-import fileDownload from 'js-file-download';
 import { FaDownload } from 'react-icons/fa';
 import { saveAs } from 'file-saver';
 
