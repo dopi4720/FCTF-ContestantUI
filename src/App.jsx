@@ -9,7 +9,7 @@ import Template from './components/Template';
 import TicketList from './components/ticket/TicketListPage';
 import TicketDetailPage from './components/ticket/TicketDetailPage';
 import Scoreboard from './components/scoreboard/Scoreboard';
-import UserProfile from './components/user/Userprofile';
+import UserProfile from './components/user/UserProfile';
 
 function App() {
   const [count, setCount] = useState(0)

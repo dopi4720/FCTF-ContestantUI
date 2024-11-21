@@ -13,6 +13,8 @@ const TicketList = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [tickets, setTickets] = useState([]);
   const navigate = useNavigate();
+  const ticketTypes = [];
+
 
   const fetchTickets = async () => {
     try {
@@ -218,13 +220,18 @@ const TicketList = () => {
                 >
                   Type
                 </label>
-                <input
-                  type="text"
+                <select
                   id="type"
                   name="type"
                   className="w-full rounded-md border border-gray-300 p-2 focus:border-theme-color-primary focus:outline-none focus:ring-1 focus:ring-theme-color-primary"
                   required
-                />
+                >
+                  {ticketTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="mb-6">
