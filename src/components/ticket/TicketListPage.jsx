@@ -2,34 +2,34 @@ import React, { useEffect, useState } from "react";
 import { BiTime } from "react-icons/bi";
 import { BsCheckCircle, BsClock, BsXCircle } from "react-icons/bs";
 import { FaExclamationCircle, FaPlus, FaSearch, FaTicketAlt, FaTimes } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { API_LIST_TICKET, API_TICKET_CREATE_BY_USER, BASE_URL } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
-import { useNavigate } from "react-router-dom";
 
 const TicketList = () => {
   const [showModal, setShowModal] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [tickets, setTickets] = useState([])
-  const navigate = useNavigate()
+  const [tickets, setTickets] = useState([]);
+  const navigate = useNavigate();
+
+  const fetchTickets = async () => {
+    try {
+      const api = new ApiHelper(BASE_URL);
+      const response = await api.get(API_LIST_TICKET);
+      if (response && response.tickets) {
+        setTickets(response.tickets);
+      } else {
+        throw new Error("Failed to fetch tickets");
+      }
+    } catch (err) {
+      console.error("Error occurred:", err);
+      setError("Could not load tickets. Please try again.");
+    }
+  };
 
   useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        const api = new ApiHelper(BASE_URL);
-        const response = await api.get(API_LIST_TICKET);
-        if (response && response.tickets) {
-          setTickets(response.tickets);
-        } else {
-          throw new Error("Failed to fetch tickets");
-        }
-      } catch (err) {
-        console.error('Error occurred:', err);
-        setError("Could not load tickets. Please try again.");
-      }
-    };
     fetchTickets();
   }, []);
 
@@ -37,8 +37,9 @@ const TicketList = () => {
     navigate(`/ticket/${ticketId}`);
   };
 
-  const filteredTickets = tickets.filter(ticket => {
-    const matchesSearch = ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredTickets = tickets.filter((ticket) => {
+    const matchesSearch =
+      ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = filterStatus === "all" || ticket.status === filterStatus;
     return matchesSearch && matchesStatus;
@@ -58,33 +59,39 @@ const TicketList = () => {
   };
 
   const handleCreateTicket = () => {
-    setShowConfirmation(true);
+    setShowModal(true); // Directly show the modal form
   };
 
-  const confirmCreateTicket = () => {
-    setShowConfirmation(false);
-    setShowModal(true);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       setShowModal(false);
+
       const api = new ApiHelper(BASE_URL);
+      const ticketData = {
+        title: e.target.title.value,
+        type: e.target.type.value,
+        description: e.target.description.value,
+      };
 
-      const response = api.postForm(API_TICKET_CREATE_BY_USER, {
-        title: { title },
-        type: { type },
-        author_id: { author_id },
-        description: { description }
-      })
+      const response = await api.post(API_TICKET_CREATE_BY_USER, ticketData);
 
-      if (response.status == 'ok') {
-        console.log('Create successful')
+      if (response.status === 201) {
+        // Success: Add the new ticket to the list
+        setError(""); // Clear any previous errors
+        console.log('Hello')
+        alert("Ticket sent successfully!");
+        fetchTickets();
+      } else {
+        // Handle different error cases
+        const message = response.message || response.error || "An error occurred.";
+        setError(message);
+
       }
     } catch (err) {
-      setError("Failed to create ticket. Please try again.");
+      console.error("Error occurred:", err);
+      setError("Failed to send the ticket. Please try again.");
+
     }
   };
 
@@ -103,7 +110,6 @@ const TicketList = () => {
           </button>
         </div>
       )}
-
 
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">Support Tickets</h1>
@@ -164,8 +170,6 @@ const TicketList = () => {
               </div>
               <span className="capitalize">{ticket.type}</span>
               {getStatusIcon(ticket.status)}
-
-
             </div>
             <h3 className="mb-2 text-lg font-semibold text-gray-800 group-hover:text-theme-color-primary">
               {ticket.title}
@@ -173,36 +177,10 @@ const TicketList = () => {
             <div className="flex items-center justify-between text-sm text-gray-500">
               <span>Created: {ticket.date}</span>
               <span className="capitalize">{ticket.status.replace("_", " ")}</span>
-
             </div>
           </div>
         ))}
       </div>
-
-      {showConfirmation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h2 className="mb-4 text-xl font-bold">Create New Ticket</h2>
-            <p className="mb-6 text-gray-600">
-              Are you sure you want to create a new ticket?
-            </p>
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={() => setShowConfirmation(false)}
-                className="rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmCreateTicket}
-                className="rounded-md bg-theme-color-primary px-4 py-2 text-white hover:bg-theme-color-primary-dark"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -228,11 +206,28 @@ const TicketList = () => {
                 <input
                   type="text"
                   id="title"
+                  name="title"
                   className="w-full rounded-md border border-gray-300 p-2 focus:border-theme-color-primary focus:outline-none focus:ring-1 focus:ring-theme-color-primary"
                   required
                 />
               </div>
               <div className="mb-4">
+                <label
+                  htmlFor="type"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Type
+                </label>
+                <input
+                  type="text"
+                  id="type"
+                  name="type"
+                  className="w-full rounded-md border border-gray-300 p-2 focus:border-theme-color-primary focus:outline-none focus:ring-1 focus:ring-theme-color-primary"
+                  required
+                />
+              </div>
+
+              <div className="mb-6">
                 <label
                   htmlFor="description"
                   className="mb-2 block text-sm font-medium text-gray-700"
@@ -241,19 +236,18 @@ const TicketList = () => {
                 </label>
                 <textarea
                   id="description"
-                  rows="4"
+                  name="description"
                   className="w-full rounded-md border border-gray-300 p-2 focus:border-theme-color-primary focus:outline-none focus:ring-1 focus:ring-theme-color-primary"
+                  rows="3"
                   required
                 ></textarea>
               </div>
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="rounded-md bg-theme-color-primary px-4 py-2 text-white hover:bg-theme-color-primary-dark"
-                >
-                  Submit
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="w-full rounded-md bg-theme-color-primary px-4 py-2 text-white transition-all hover:bg-theme-color-primary-dark"
+              >
+                Submit
+              </button>
             </form>
           </div>
         </div>

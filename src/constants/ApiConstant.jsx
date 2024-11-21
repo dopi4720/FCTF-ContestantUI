@@ -33,3 +33,6 @@ export const API_CHALLENGE_CHECK_CACHE = "/api/challenge/check_cache"
 
 //User
 export const API_USER_PROFILE = '/api/v1/users/profile'
+
+//dowload files
+export const API_FILE_DOWLOAD = "/api/files"

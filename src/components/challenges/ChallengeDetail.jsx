@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
-import { API_CHALLEGE_START, API_CHALLENGE_STOP, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
+import { API_CHALLEGE_START, API_FILE_DOWLOAD, API_CHALLENGE_STOP, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
+import fileDownload from 'react-file-download';
+import { FaDownload } from 'react-icons/fa';
 
 const ChallengeDetail = () => {
   const { id } = useParams();
@@ -65,6 +67,24 @@ const ChallengeDetail = () => {
     }
   };
 
+  const getFileName = (filePath) => {
+    const pathParts = filePath.split("/");
+    const fullName = pathParts[pathParts.length - 1]; // Lấy phần cuối cùng
+    return fullName.split("?")[0]; // Loại bỏ phần query string
+  };
+
+
+  const handleDowloadFiles = async (filePath) => {
+    const api = new ApiHelper(BASE_URL);
+    try {
+      const response = await api.get(`${BASE_URL}${filePath}`);
+      let fileName = getFileName(filePath)
+      // Download the file
+      fileDownload(response, fileName);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+    }
+  };
   const Modal = ({ isOpen, message, onClose }) => {
     if (!isOpen) return null;
 
@@ -136,6 +156,7 @@ const ChallengeDetail = () => {
       try {
         const detailsResponse = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
         setChallenge(detailsResponse.data);
+        setIsSubmitted(detailsResponse.data.solve_by_myteam)
         if (detailsResponse.data.time_limit !== -1) {
           setTimeLimit(detailsResponse.data.time_limit || null);
           const storedStartTime = localStorage.getItem(`challenge_${challengeId}_startTime`);
@@ -211,7 +232,6 @@ const ChallengeDetail = () => {
         localStorage.setItem(`challenge_${challengeId}_startTime`, startTime);
         console.log(`Challenge url: ${response.challenge_url}`)
         setUrl(response.challenge_url);
-        setFileLink(response.data)
 
         setTimeLeft(timeLimit * 60);
         setShowTimeUpAlert(false);
@@ -320,25 +340,44 @@ const ChallengeDetail = () => {
             <div className="prose max-w-none">
               {challenge ? (
                 <>
-                  <p className="text-theme-color-neutral-content text-lg mb-6">
+                  <h1 className="text-theme-color-neutral-content text-lg mb-6">
                     Max attempts: {challenge.max_attempts} <br />
+                    Submission: {challenge.attemps} times <br />
                     Type: {challenge.type}
-                  </p>
+                    <br />
+                    <br />
+
+                    {challenge.files && (
+                      <div>
+                        <h3>File:</h3>
+                        <ul>
+                          {challenge.files.map((file, index) => (
+                            <li key={index}>
+                              <button
+                                onClick={() => handleDowloadFiles(file)}
+                                className="flex my-2 items-center bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <FaDownload className="mr-2" /> {/* Thêm icon */}
+                                {getFileName(file)}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </h1>
+
                   <div className="bg-neutral-low p-4 rounded-md">
                     <div className="bg-white p-4 rounded-md overflow-y-auto max-h-96">
                       <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
                         {challenge.description}
                       </pre>
 
-                      {!challenge.require_deploy && (
-                        <>
-                          <h4>Click Start Challenge to download the file needs</h4>
-                          {isChallengeStarted && <h5>{fileLink}</h5>}
-                        </>
+                      {url && (
+                        <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
+                          Your connection info is: {url}
+                        </pre>
                       )}
-                      <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
-                        Your connection info is: {url}
-                      </pre>
 
                     </div>
                   </div>
@@ -426,7 +465,7 @@ const ChallengeDetail = () => {
                 onClose={() => setIsModalOpen(false)}
               />
               {/* Nút Start Challenge chỉ hiển thị nếu require_deploy là true */}
-              {challenge && !isChallengeStarted && (
+              {challenge && challenge.require_deploy && !isChallengeStarted && !isSubmitted && (
                 <button
                   type="button"
                   onClick={handleStartChallenge}
