@@ -35,6 +35,7 @@ export const API_CHALLENGE_CHECK_CACHE = "/api/challenge/check_cache"
 export const API_USER_PROFILE = '/api/v1/users/profile'
 export const API_TEAM_POINT = '/api/v1/teams/contestant'
 export const API_TEAM_PERFORMANCE = '/team/solves'
+export const API_CHANGE_PASSWORD= '/api/changepassword'
 
 //dowload files
 export const API_FILE_DOWLOAD = "/api/files"

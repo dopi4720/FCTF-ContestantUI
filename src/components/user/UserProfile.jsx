@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Line } from "react-chartjs-2";
-import { FaLock, FaTrophy, FaUsers, FaCalendarAlt, FaMedal, FaChartLine } from "react-icons/fa";
+import { FaLock, FaMedal, FaTrophy, FaUsers } from "react-icons/fa";
+import { API_CHANGE_PASSWORD, API_TEAM_PERFORMANCE, API_TEAM_POINT, API_USER_PROFILE, BASE_URL } from "../../constants/ApiConstant";
+import { ACCESS_TOKEN_KEY } from "../../constants/LocalStorageKey";
 import ApiHelper from "../../utils/ApiHelper";
-import { API_TEAM_PERFORMANCE, API_TEAM_POINT, API_USER_PROFILE, BASE_URL } from "../../constants/ApiConstant";
 import PerformanceChart from "./PerformanceChart";
 
 const UserProfile = () => {
@@ -86,6 +86,41 @@ const UserProfile = () => {
         { name: "Binary Analysis", difficulty: "Hard", completed: false, progress: 75 },
         { name: "Cryptography Challenge", difficulty: "Medium", completed: true, progress: 100 }
     ];
+    const handleChangePassword = async () => {
+        const api = new ApiHelper(BASE_URL);
+        const { oldPassword, newPassword, confirmPassword } = passwordData;
+        const generatedToken= localStorage.getItem(ACCESS_TOKEN_KEY)
+    
+        // Basic validation
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            alert("Please fill in all fields.");
+            return;
+        }
+    
+        if (newPassword !== confirmPassword) {
+            alert("New passwords do not match.");
+            return;
+        }
+    
+        try {
+            
+            const result = await api.postForm(`${API_CHANGE_PASSWORD}`, {
+                current_password: oldPassword,
+                new_password: newPassword,
+                generatedToken,
+            });
+            
+            if (result && result.msg) {
+                alert(result.msg);
+                setShowPasswordModal(false); 
+            } else {
+                alert("Failed to change password.");
+            }
+        } catch (error) {
+            console.error("Error while changing password:", error);
+            alert("An error occurred. Please try again later.");
+        }
+    };
 
     return (
         <div className="min-h-screen p-4">
@@ -265,6 +300,7 @@ const UserProfile = () => {
                                 <button
                                     className="px-4 py-2 bg-theme-color-primary text-white rounded-md hover:bg-theme-color-primary-dark"
                                     onClick={() => {
+                                        handleChangePassword()
                                         // Handle password change logic here
                                         setShowPasswordModal(false);
                                     }}

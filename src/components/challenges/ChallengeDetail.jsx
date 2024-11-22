@@ -271,9 +271,13 @@ const ChallengeDetail = () => {
                     console.error("Error updating challenge details:", detailsError);
                 }
             } else {
+                setModalMessage('Fail to start new challenge,', response.error)
+                setIsModalOpen(true)
                 console.error("Failed to start challenge:", response.error || "Unknown error");
             }
         } catch (err) {
+            setModalMessage('Fail to start new challenge,', err)
+            setIsModalOpen(true)
             console.error("Error starting challenge:", err.message || err);
         } finally {
             setIsStarting(false);
@@ -316,6 +320,8 @@ const ChallengeDetail = () => {
             const response = await api.postForm(SUBMIT_FLAG, data)
             if (response?.data.status === "correct") {
                 setModalMessage(response.data.message);
+                setIsSubmitted(true)
+                setTimeRemaining(null)
 
             } else if (response?.data.status === "already_solved") {
                 setModalMessage(response.data.message || "Solved");
@@ -385,7 +391,6 @@ const ChallengeDetail = () => {
                                             </pre>
                                             {challenge.files && (
                                                 <div>
-                                                    <h3 className="text-xl font-semibold mb-4">Files:</h3>
                                                     <div className="flex flex-wrap gap-4">
                                                         {challenge.files.map((file, index) => (
                                                             <button
@@ -513,7 +518,7 @@ const ChallengeDetail = () => {
                             )}
 
                             {/* Display the Stop Challenge button if the challenge is started and require_deploy is true */}
-                            {isChallengeStarted && challenge?.require_deploy && (
+                            {isChallengeStarted && challenge?.require_deploy && !isSubmitted &&(
                                 <button
                                     type="button"
                                     onClick={handleStopChallenge}
