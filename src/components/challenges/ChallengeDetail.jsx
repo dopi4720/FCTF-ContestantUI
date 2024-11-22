@@ -10,7 +10,7 @@ const ChallengeDetail = () => {
   const { id } = useParams();
   const challengeId = id ? parseInt(id, 10) : undefined;
   const [timeLeft, setTimeLeft] = useState(null);
-  const [timeLimit, setTimeLimit] = useState(null);
+  const [timeLimit, setTimeLimit] = useState(null); 
   const [isChallengeStarted, setIsChallengeStarted] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [answer, setAnswer] = useState("");
@@ -27,8 +27,8 @@ const ChallengeDetail = () => {
   const [hints, setHints] = useState([])
   const [unlockHints, setUnlockHints] = useState([])
   const [hint, setHint] = useState(null)
-  const [isButtonVisible, setIsButtonVisible] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
+  const [timeRemaining, setTimeRemaining]= useState(null)
 
   const fetchHints = async () => {
     const api = new ApiHelper(BASE_URL);
@@ -114,7 +114,7 @@ const ChallengeDetail = () => {
       if (response.success) {
         setUnlockHints((prev) => [...prev, hintId]);
       }
-      return response; // Return the response for further evaluation
+      return response; 
     } catch (error) {
       console.error('Failed to unlock hint:', error);
       return { success: false, errors: error.response?.data?.errors || {} };
@@ -158,13 +158,10 @@ const ChallengeDetail = () => {
         setIsSubmitted(detailsResponse.data.solve_by_myteam)
         if (detailsResponse.data.time_limit !== -1) {
           setTimeLimit(detailsResponse.data.time_limit || null);
-          const storedStartTime = localStorage.getItem(`challenge_${challengeId}_startTime`);
-          if (storedStartTime && detailsResponse.data.time_limit) {
-            const elapsedSeconds = (Date.now() - parseInt(storedStartTime, 10)) / 1000;
-            const initialTimeLeft = detailsResponse.data.time_limit * 60 - elapsedSeconds;
-            setTimeLeft(initialTimeLeft > 0 ? initialTimeLeft : 0);
+          setTimeRemaining(detailsResponse.data.time_remaining)
+          if (detailsResponse.time_remaining > 0  || detailsResponse.time_remaining !== null) {
             setUrl(detailsResponse.challenge_url)
-            setIsChallengeStarted(initialTimeLeft > 0);
+            setIsChallengeStarted(detailsResponse.is_started);
           }
         } else {
           setTimeLimit(null)
@@ -178,9 +175,9 @@ const ChallengeDetail = () => {
   }, [id]);
 
   useEffect(() => {
-    if (isChallengeStarted && timeLeft > 0) {
+    if (isChallengeStarted && timeRemaining > 0) {
       timerRef.current = setInterval(() => {
-        setTimeLeft((prevTime) => {
+        setTimeRemaining((prevTime) => {
           if (prevTime <= 1) {
             clearInterval(timerRef.current);
             setShowTimeUpAlert(true);
@@ -195,7 +192,7 @@ const ChallengeDetail = () => {
     }
 
     return () => clearInterval(timerRef.current);
-  }, [isChallengeStarted, timeLeft]);
+  }, [isChallengeStarted, timeRemaining]);
 
   const handeHintDetailClick = async (hintId) => {
     const hintDetailsResponse = await FetchHintDetails(hintId);
@@ -232,7 +229,7 @@ const ChallengeDetail = () => {
         console.log(`Challenge url: ${response.challenge_url}`)
         setUrl(response.challenge_url);
 
-        setTimeLeft(timeLimit * 60);
+        setTimeRemaining(timeRemaining * 60);
         setShowTimeUpAlert(false);
         setIsChallengeStarted(true);
         setIsSubmitted(false);
@@ -393,7 +390,13 @@ const ChallengeDetail = () => {
             <div className="mb-8">
               <div className="flex items-center justify-center space-x-2 text-2xl font-mono bg-white p-4 rounded-lg shadow-md">
                 <FiClock className="text-theme-color-primary" />
-                <span className="font-bold">{formatTime(timeLeft)}</span>
+                {!isChallengeStarted  && (
+                    <span className="font-bold">{formatTime(timeLimit)}</span>
+                )}
+                {isChallengeStarted && (
+                  <span className='font-bold'>{formatTime(timeRemaining)}</span>
+                )}
+                
               </div>
             </div>
 
