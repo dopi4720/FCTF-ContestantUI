@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Line } from "react-chartjs-2";
-import { Chart as ChartJS } from "chart.js/auto";
 import { FaLock, FaTrophy, FaUsers, FaCalendarAlt, FaMedal, FaChartLine } from "react-icons/fa";
 
 const UserProfile = () => {
@@ -53,11 +52,11 @@ const UserProfile = () => {
                 <div className="bg-white rounded-lg shadow p-6 flex items-center justify-center">
                    <div>
                    <div className="flex items-center justify-center">
-                        <div class="relative w-[125px] h-[125px] overflow-hidden rounded-full group ring-1 transition-all mb-3">
+                        <div className="relative w-[125px] h-[125px] overflow-hidden rounded-full group ring-1 transition-all mb-3">
                             <img
                                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcwhPhFEnyOzxoKysVzNiMn245tFGSEBFavA&s"
                                 alt="Profile"
-                                class="w-full h-full object-cover"
+                                className="w-full h-full object-cover"
                             />
                         </div>
 
@@ -70,7 +69,7 @@ const UserProfile = () => {
                                 onClick={() => setShowPasswordModal(true)}
                                 className="flex items-center text-theme-color-primary hover:text-theme-color-primary-dark"
                             >
-                                <div class="flex items-center space-x-1">
+                                <div className="flex items-center space-x-1">
                                     <FaLock />
                                     <span className="">Change Password</span>
                                 </div>
