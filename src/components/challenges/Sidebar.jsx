@@ -74,8 +74,8 @@ const Sidebar = ({ isOpen, toggleOpen }) => {
                 onClick={() => handleTopicClick(topic)}
                 className="w-full px-4 py-3 rounded-md flex items-center space-x-3 hover:bg-theme-color-base transition-colors duration-200 text-left"
               >
-                <LuComputer />
-                <span className="text-theme-color-neutral-content font-medium">
+                <LuComputer className="text-primary" />
+                <span className="text-theme-color-neutral-content font-medium text-primary">
                   {topic.topic_name}
                 </span>
               </button>

@@ -27,7 +27,7 @@ const TicketDetailPage = () => {
   }, [ticketId])
   
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         {/* Header Section */}
         <div className="bg-theme-color-primary p-6">

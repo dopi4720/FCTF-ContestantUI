@@ -5,6 +5,7 @@ import { FaExclamationCircle, FaPlus, FaSearch, FaTicketAlt, FaTimes } from "rea
 import { useNavigate } from "react-router-dom";
 import { API_LIST_TICKET, API_TICKET_CREATE_BY_USER, BASE_URL } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
+import Swal from 'sweetalert2';
 
 const TicketList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -78,11 +79,18 @@ const TicketList = () => {
 
       const response = await api.post(API_TICKET_CREATE_BY_USER, ticketData);
 
-      if (response.status === 201) {
+      if (response.status === true) {
         // Success: Add the new ticket to the list
         setError(""); // Clear any previous errors
-        console.log('Hello')
-        alert("Ticket sent successfully!");
+        Swal.fire({
+          title: 'Success',
+          text: 'Ticket sent successfully!',
+          icon: 'success',
+          confirmButtonText: 'OK',
+          customClass: {
+            confirmButton: 'rounded-md bg-theme-color-primary px-4 py-2 text-white transition-all hover:bg-theme-color-primary-dark focus:outline-none focus:ring-2 focus:ring-theme-color-primary focus:ring-offset-2',
+          },
+        });
         fetchTickets();
       } else {
         // Handle different error cases
@@ -97,7 +105,7 @@ const TicketList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8">
       {error && (
         <div className="mb-4 flex items-center gap-2 rounded-md bg-red-100 p-4 text-red-700">
           <FaExclamationCircle />

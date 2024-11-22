@@ -1,14 +1,36 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { FaLock, FaTrophy, FaUsers, FaCalendarAlt, FaMedal, FaChartLine } from "react-icons/fa";
+import ApiHelper from "../../utils/ApiHelper";
+import { API_USER_PROFILE } from "../../constants/ApiConstant";
 
 const UserProfile = () => {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [userInfo, setUserInfo] = useState({});
     const [passwordData, setPasswordData] = useState({
         oldPassword: "",
         newPassword: "",
         confirmPassword: ""
     });
+
+    useEffect(() => {
+
+    }, [])
+
+    fetchUserInfo = async () => {
+        const api = new ApiHelperr(BASE_URL);
+    try {
+      const response = await api.get(`${API_USER_PROFILE}`);
+      if (response.hints) {
+        const fetchedHintData = response.hints.hints
+        setHints(fetchedHintData || []);
+      } else {
+        console.error("Failed to fetch hints:", response.error || "Unknown error");
+      }
+    } catch (error) {
+      console.error("Error fetching hints:", error);
+    }
+    }
 
     const teamMembers = [
         { name: "John Doe", role: "Team Lead", email: "john@ctf.com", points: 2500 },
@@ -180,28 +202,28 @@ const UserProfile = () => {
                         <h2 className="text-xl font-bold mb-4">Change Password</h2>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Old Password</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Old Password</label>
                                 <input
                                     type="password"
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-theme-color-primary focus:ring focus:ring-theme-color-primary focus:ring-opacity-50"
+                                    className="w-full rounded-md border border-gray-300 p-2 focus:border-theme-color-primary focus:outline-none focus:ring-1 focus:ring-theme-color-primary"
                                     value={passwordData.oldPassword}
                                     onChange={(e) => setPasswordData({ ...passwordData, oldPassword: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">New Password</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
                                 <input
                                     type="password"
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-theme-color-primary focus:ring focus:ring-theme-color-primary focus:ring-opacity-50"
+                                    className="w-full rounded-md border border-gray-300 p-2 focus:border-theme-color-primary focus:outline-none focus:ring-1 focus:ring-theme-color-primary"
                                     value={passwordData.newPassword}
                                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
                                 <input
                                     type="password"
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-theme-color-primary focus:ring focus:ring-theme-color-primary focus:ring-opacity-50"
+                                    className="w-full rounded-md border border-gray-300 p-2 focus:border-theme-color-primary focus:outline-none focus:ring-1 focus:ring-theme-color-primary"
                                     value={passwordData.confirmPassword}
                                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                                 />
