@@ -53,32 +53,6 @@ const UserProfile = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Profile Card */}
                 <div className="bg-white rounded-lg shadow p-6 flex items-center justify-center">
-<<<<<<< HEAD
-                   <div>
-                   <div className="flex items-center justify-center">
-                        <div className="relative w-[125px] h-[125px] overflow-hidden rounded-full group ring-1 transition-all mb-3">
-                            <img
-                                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcwhPhFEnyOzxoKysVzNiMn245tFGSEBFavA&s"
-                                alt="Profile"
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-
-                    </div>
-                    <div className="flex items-center justify-center">
-                        <div className="text-center">
-                            <h2 className="text-xl font-bold">Khoa Điếu Cày</h2>
-                            <p className="text-gray-600">Tên team</p>
-                            <button
-                                onClick={() => setShowPasswordModal(true)}
-                                className="flex items-center text-theme-color-primary hover:text-theme-color-primary-dark"
-                            >
-                                <div className="flex items-center space-x-1">
-                                    <FaLock />
-                                    <span className="">Change Password</span>
-                                </div>
-                            </button>
-=======
                     <div>
                         <div className="flex items-center justify-center">
                             <div class="relative w-[125px] h-[125px] overflow-hidden rounded-full group ring-1 transition-all mb-3">
@@ -104,7 +78,6 @@ const UserProfile = () => {
                                     </div>
                                 </button>
                             </div>
->>>>>>> 9acbfb3b805056e9525fc275aa62e6871d4b191d
                         </div>
                     </div>
                 </div>
