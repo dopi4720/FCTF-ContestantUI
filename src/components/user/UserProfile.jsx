@@ -2,72 +2,89 @@ import React, { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { FaLock, FaTrophy, FaUsers, FaCalendarAlt, FaMedal, FaChartLine } from "react-icons/fa";
 import ApiHelper from "../../utils/ApiHelper";
-import { API_USER_PROFILE } from "../../constants/ApiConstant";
+import { API_TEAM_PERFORMANCE, API_TEAM_POINT, API_USER_PROFILE, BASE_URL } from "../../constants/ApiConstant";
+import PerformanceChart from "./PerformanceChart";
 
 const UserProfile = () => {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [userInfo, setUserInfo] = useState({});
+    const [teamPointInfo, setTeamPointInfo] = useState({
+        members: []
+    });
+    const [teamPerformance, setTeamPerformance] = useState({
+        data: []
+    });
     const [passwordData, setPasswordData] = useState({
         oldPassword: "",
         newPassword: "",
         confirmPassword: ""
     });
+    const [finishPercent, setFinishPercent] = useState(75);
 
     useEffect(() => {
-
+        fetchUserInfo();
+        fetchTeamPointInfo();
+        fetchPerformaceData();
     }, [])
 
-    fetchUserInfo = async () => {
-        const api = new ApiHelperr(BASE_URL);
-    try {
-      const response = await api.get(`${API_USER_PROFILE}`);
-      if (response.hints) {
-        const fetchedHintData = response.hints.hints
-        setHints(fetchedHintData || []);
-      } else {
-        console.error("Failed to fetch hints:", response.error || "Unknown error");
-      }
-    } catch (error) {
-      console.error("Error fetching hints:", error);
-    }
-    }
-
-    const teamMembers = [
-        { name: "John Doe", role: "Team Lead", email: "john@ctf.com", points: 2500 },
-        { name: "Jane Smith", role: "Security Expert", email: "jane@ctf.com", points: 2100 },
-        { name: "Mike Johnson", role: "Cryptographer", email: "mike@ctf.com", points: 1900 }
-    ];
-
-    const performanceData = {
-        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-        datasets: [
-            {
-                label: "Team Points",
-                data: [1200, 1900, 2400, 2800, 3200, 3800],
-                borderColor: "#ff6700",
-                tension: 0.4
+    let fetchUserInfo = async () => {
+        const api = new ApiHelper(BASE_URL);
+        try {
+            const response = await api.get(`${API_USER_PROFILE}`);
+            console.log(response)
+            if (response.data) {
+                setUserInfo(response.data);
+            } else {
+                console.error("Failed to fetch hints:", response.error || "Unknown error");
             }
-        ]
-    };
+        } catch (error) {
+            console.error("Error fetching UserInfo:", error);
+        }
+    }
+
+    let fetchTeamPointInfo = async () => {
+        const api = new ApiHelper(BASE_URL);
+        try {
+            const response = await api.get(`${API_TEAM_POINT}`);
+            if (response.data) {
+                setTeamPointInfo(response.data);
+                setFinishPercent((response.data.score / response.data.challengeTotalScore * 100).toFixed(2));
+            } else {
+                console.error("Failed to fetch hints:", response.error || "Unknown error");
+            }
+        } catch (error) {
+            console.error("Error fetching TeamPointInfo:", error);
+        }
+    }
+
+    let fetchPerformaceData = async () => {
+        const api = new ApiHelper(BASE_URL);
+        try {
+            const response = await api.get(`${API_TEAM_PERFORMANCE}`);
+            console.log(response);
+            if (response.data) {
+                setTeamPerformance(response)
+            } else {
+                console.error("Failed to fetch hints:", response.error || "Unknown error");
+            }
+        } catch (error) {
+            console.error("Error fetching TeamPointInfo:", error);
+        }
+    }
 
     const achievements = [
         { id: 1, title: "First Blood", description: "First to solve a challenge", type: "gold" },
         { id: 2, title: "Speed Demon", description: "Completed 5 challenges in 1 hour", type: "silver" },
         { id: 3, title: "Master Hacker", description: "Solved all web challenges", type: "bronze" },
         { id: 4, title: "Master Hacker", description: "Solved all web challenges", type: "bronze" },
-        { id: 3, title: "Master Hacker", description: "Solved all web challenges", type: "bronze" },
-        { id: 4, title: "Master Hacker", description: "Solved all web challenges", type: "bronze" }
+        { id: 5, title: "Master Hacker", description: "Solved all web challenges", type: "bronze" },
+        { id: 6, title: "Master Hacker", description: "Solved all web challenges", type: "bronze" }
     ];
 
     const recentChallenges = [
         { name: "Web Exploit 101", difficulty: "Easy", completed: true, progress: 100 },
         { name: "Binary Analysis", difficulty: "Hard", completed: false, progress: 75 },
         { name: "Cryptography Challenge", difficulty: "Medium", completed: true, progress: 100 }
-    ];
-
-    const upcomingEvents = [
-        { name: "Global CTF 2024", date: "2024-03-15", location: "Online" },
-        { name: "Security Summit CTF", date: "2024-04-01", location: "New York" }
     ];
 
     return (
@@ -77,24 +94,24 @@ const UserProfile = () => {
                 <div className="bg-white rounded-lg shadow p-6 flex items-center justify-center">
                     <div>
                         <div className="flex items-center justify-center">
-                            <div class="relative w-[125px] h-[125px] overflow-hidden rounded-full group ring-1 transition-all mb-3">
+                            <div className="relative w-[125px] h-[125px] overflow-hidden rounded-full group ring-1 transition-all mb-3">
                                 <img
                                     src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcwhPhFEnyOzxoKysVzNiMn245tFGSEBFavA&s"
                                     alt="Profile"
-                                    class="w-full h-full object-cover"
+                                    className="w-full h-full object-cover"
                                 />
                             </div>
 
                         </div>
                         <div className="flex items-center justify-center">
                             <div className="text-center">
-                                <h2 className="text-xl font-bold">Khoa Điếu Cày</h2>
-                                <p className="text-gray-600">Tên team</p>
+                                <h2 className="text-xl font-bold">{userInfo.username}</h2>
+                                <p className="text-gray-600">{userInfo.team}</p>
                                 <button
                                     onClick={() => setShowPasswordModal(true)}
                                     className="flex items-center text-theme-color-primary hover:text-theme-color-primary-dark"
                                 >
-                                    <div class="flex items-center space-x-1">
+                                    <div className="flex items-center space-x-1">
                                         <FaLock />
                                         <span className="">Change Password</span>
                                     </div>
@@ -110,17 +127,29 @@ const UserProfile = () => {
                         <h2 className="text-xl font-bold">Team Ranking</h2>
                         <FaTrophy className="text-yellow-500 text-2xl" />
                     </div>
-                    <div className="text-5xl font-bold text-theme-color-primary mb-3">#3</div>
-                    <p className="text-gray-600">Team points: </p>
-                    <div className="mt-4 bg-gray-200 rounded-full h-2">
-                        <div className="bg-theme-color-primary h-2 rounded-full w-3/4"></div>
+                    <div className="text-5xl font-bold text-theme-color-primary mb-3">{teamPointInfo.place}</div>
+                    <p className="text-gray-600">Team Score: {teamPointInfo.score}</p>
+                    <div className="p-3">
+                        <div className="mt-4 bg-gray-200 rounded-full h-2 relative">
+                            <div
+                                className="bg-theme-color-primary h-2 rounded-full"
+                                style={{ width: `${finishPercent}%` }}
+                            ></div>
+                            <span
+                                className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full text-sm text-gray-700 font-medium"
+                            >
+                                Finished: {finishPercent}%
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Performance Chart Card */}
                 <div className="bg-white rounded-lg shadow p-6">
                     <h2 className="text-xl font-bold mb-4">Team Performance</h2>
-                    <Line data={performanceData} options={{ responsive: true }} />
+                    <div className="max-h-[185px] flex items-center justify-center">
+                        <PerformanceChart data={teamPerformance.data} />
+                    </div>
                 </div>
 
                 {/* Team Members Table */}
@@ -134,18 +163,16 @@ const UserProfile = () => {
                             <thead>
                                 <tr className="bg-primary text-white">
                                     <th className="p-4 text-left">Name</th>
-                                    <th className="p-4 text-left">Role</th>
                                     <th className="p-4 text-left">Email</th>
-                                    <th className="p-4 text-left">Points</th>
+                                    <th className="p-4 text-left">Score</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {teamMembers.map((member, index) => (
+                                {teamPointInfo.members.map((member, index) => (
                                     <tr key={index} className="border-t border-primary">
                                         <td className="p-4">{member.name}</td>
-                                        <td className="p-4">{member.role}</td>
                                         <td className="p-4">{member.email}</td>
-                                        <td className="p-4">{member.points}</td>
+                                        <td className="p-4">{member.score}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -174,17 +201,17 @@ const UserProfile = () => {
                     <div className="bg-white rounded-lg shadow p-6">
                         <h2 className="text-xl font-bold mb-4">Recent Challenges</h2>
                         <div className="space-y-4">
-                            {recentChallenges.map((challenge, index) => (
+                            {teamPerformance.data.map((challenge, index) => (
                                 <div key={index} className="border-b pb-4">
                                     <div className="flex justify-between items-center">
-                                        <h3 className="font-semibold">{challenge.name}</h3>
-                                        <span className={`px-2 py-1 rounded-full text-xs ${challenge.difficulty === "Easy" ? "bg-green-100 text-green-800" : challenge.difficulty === "Medium" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800"}`}>
-                                            {challenge.difficulty}
+                                        <h3 className="font-semibold">{challenge.challenge.name}</h3>
+                                        <span className={`px-2 py-1 rounded-full text-xs ${challenge.type === "correct" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                            {challenge.type.toUpperCase()}
                                         </span>
                                     </div>
                                     <div className="mt-2 bg-gray-200 rounded-full h-2">
                                         <div
-                                            className={`h-2 rounded-full ${challenge.completed ? "bg-green-500" : "bg-theme-color-primary"}`}
+                                            className={`h-2 rounded-full ${challenge.type === "correct" ? "bg-green-500" : "bg-theme-color-primary"}`}
                                             style={{ width: `${challenge.progress}%` }}
                                         ></div>
                                     </div>

@@ -20,7 +20,7 @@ export const API_UNLOCK_HINTS = '/api/v1/unlocks'  //unlock hint
 export const API_GET_UNLOCKED_HINT = '/api/v1/unlocks'  //get unlock
 
 //Scoreboard
-export const API_SCOREBOARD_TOP_STANDINGS = '/api/v1/scoreboard'
+export const API_SCOREBOARD_TOP_STANDINGS = '/api/v1/scoreboard/top/10'
 
 //Ticket
 export const API_LIST_TICKET = '/api/tickets-user'
@@ -33,7 +33,8 @@ export const API_CHALLENGE_CHECK_CACHE = "/api/challenge/check_cache"
 
 //User
 export const API_USER_PROFILE = '/api/v1/users/profile'
-// export const API_USER_PROFILE = '/api/v1/teams/contestant'
+export const API_TEAM_POINT = '/api/v1/teams/contestant'
+export const API_TEAM_PERFORMANCE = '/team/solves'
 
 //dowload files
 export const API_FILE_DOWLOAD = "/api/files"
