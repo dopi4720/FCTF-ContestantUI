@@ -13,7 +13,7 @@ const TicketList = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [tickets, setTickets] = useState([]);
   const navigate = useNavigate();
-  const ticketTypes = [];
+  const ticketTypes = ["Error", "Bug", "Issues", "Question"];
 
 
   const fetchTickets = async () => {
@@ -93,7 +93,6 @@ const TicketList = () => {
     } catch (err) {
       console.error("Error occurred:", err);
       setError("Failed to send the ticket. Please try again.");
-
     }
   };
 

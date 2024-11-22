@@ -1,12 +1,10 @@
+import { saveAs } from 'file-saver';
 import React, { useEffect, useRef, useState } from "react";
+import { FaDownload } from 'react-icons/fa';
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
-import { API_CHALLEGE_START, API_FILE_DOWLOAD, API_CHALLENGE_STOP, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
+import { API_CHALLEGE_START, API_CHALLENGE_STOP, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
-import { FaDownload } from 'react-icons/fa';
-import { saveAs } from 'file-saver';
-
-
 
 const ChallengeDetail = () => {
   const { id } = useParams();
@@ -23,14 +21,12 @@ const ChallengeDetail = () => {
   const [isSubmittingFlag, setIsSubmittingFlag] = useState(false);
   const [submissionError, setSubmissionError] = useState(null);
   const [url, setUrl] = useState(null);
-  const [selectedHint, setSelectedHint] = useState(null);
   const [modalMessage, setModalMessage] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTimeOut, setisTimeOut] = useState(false)
   const [hints, setHints] = useState([])
   const [unlockHints, setUnlockHints] = useState([])
   const [hint, setHint] = useState(null)
-  const [fileLink, setFileLink] = useState(null)
   const [isButtonVisible, setIsButtonVisible] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
 
@@ -71,8 +67,8 @@ const ChallengeDetail = () => {
 
   const getFileName = (filePath) => {
     const pathParts = filePath.split("/");
-    const fullName = pathParts[pathParts.length - 1]; // Lấy phần cuối cùng
-    return fullName.split("?")[0]; // Loại bỏ phần query string
+    const fullName = pathParts[pathParts.length - 1]; 
+    return fullName.split("?")[0]; 
   };
 
 
@@ -81,7 +77,7 @@ const ChallengeDetail = () => {
     try {
       const response = await api.get(`${BASE_URL}${filePath}`);
       let fileName = getFileName(filePath)
-      // Download the file
+      
       saveAs(`${BASE_URL}${filePath}`, fileName)
     } catch (error) {
       console.error('Error downloading file:', error);
@@ -94,16 +90,16 @@ const ChallengeDetail = () => {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white p-7 rounded-lg shadow-xl max-w-xl w-full w-1/2 sm:max-w-full" >
           <h2 className="text-2xl mb-3"><b>{title}</b></h2>
-  <p className="text-lg mb-4">{message}</p>
-  <div className="flex flex-col items-end">
-    <button
-      onClick={onClose}
-      className="px-4 py-2 bg-theme-color-primary text-white rounded-lg hover:bg-theme-color-primary-dark"
-    >
-      Close
-    </button>
-  </div>
-</div>
+            <p className="text-lg mb-4">{message}</p>
+              <div className="flex flex-col items-end">
+                <button
+                  onClick={onClose}
+                    className="px-4 py-2 bg-theme-color-primary text-white rounded-lg hover:bg-theme-color-primary-dark"
+                >
+                Close
+            </button>
+          </div>
+        </div>
       </div>
     );
   };
@@ -128,15 +124,13 @@ const ChallengeDetail = () => {
   const handleUnlockHintClick = async (hintId) => {
     try {
       const response = await HintUnlocks(hintId);
-      //Nếu lỗi doạn này khi deploy, check lại API (quyền)
       if (response?.success) {
-        // Fetch hint details upon successful unlock
         setModalMessage("Unlock success")
         setIsModalOpen(true)
       } else {
         if (response.errors?.score) {
           const errorMessage = response.errors.score;
-          setModalMessage(`${errorMessage} Please Wait 3 Seconds`);
+          setModalMessage(`${errorMessage}`);
         } else if (response.errors?.target) {
           // Show error and fetch hint details
           const errorMessage = response.errors.target;
@@ -216,7 +210,6 @@ const ChallengeDetail = () => {
     }
   }
 
-
   const handleStartChallenge = async () => {
     if (!challengeId) {
       setError("Invalid challenge ID");
@@ -224,8 +217,9 @@ const ChallengeDetail = () => {
     }
 
     const api = new ApiHelper(BASE_URL);
-    const generatedToken = localStorage.getItem("accessToken");
+    const generatedToken = localStorage.getItem("accessToken"); //fix this
 
+    setIsStarting(true);
     try {
       const response = await api.post(API_CHALLEGE_START, {
         challenge_id: challengeId,
@@ -255,21 +249,22 @@ const ChallengeDetail = () => {
       }
     } catch (err) {
       console.error("Error starting challenge:", err);
+    } finally {
+      setIsStarting(false); 
     }
   };
 
-  //sẽ bỏ hàm này
   const handleStopChallenge = async () => {
     const api = new ApiHelper(BASE_URL);
     try {
       const response = await api.postForm(API_CHALLENGE_STOP, {
         challenge_id: challengeId,
       });
-      if (response.message === "Challenge stopped successfully") {
-        setIsChallengeStarted(false); // Stop the challenge
-        setTimeLeft(null); // Reset the timer to null
+      if (response.isSuccess) {
+        setIsChallengeStarted(false); 
+        setTimeLeft(null); 
         localStorage.removeItem(`challenge_${challengeId}_startTime`);
-        clearInterval(timerRef.current); // Clear the timer interval immediately
+        clearInterval(timerRef.current); 
         setModalMessage("Challenge stopped successfully.");
         setIsModalOpen(true);
       } else {
@@ -295,6 +290,7 @@ const ChallengeDetail = () => {
       const response = await api.postForm(SUBMIT_FLAG, data)
       if (response?.data.status === "correct") {
         setModalMessage(response.data.message);
+        
       } else if (response?.data.status === "already_solved") {
         setModalMessage(response.data.message || "Solved");
       } else if (response?.data.status === "ratelimited") {
@@ -414,8 +410,8 @@ const ChallengeDetail = () => {
                 {hints.map((hint) => (
                   <div key={hint.id}>
                     <button type="button" className="w-full h-16 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300  items-center justify-center font-medium text-theme-color-primary hover:bg-gray-5" onClick={() => handeHintDetailClick(hint.id)}>
-                      <div className="text-center">Hint: {hint.id}</div>
-                      <div className="text-center">Cost: {hint.cost}</div>
+                      <div className="text-center">Hint</div>
+                      <div className="text-center">{hint.cost} Points</div>
                     </button>
                     <button
                       onClick={() => handleUnlockHintClick(hint.id)}
@@ -469,19 +465,32 @@ const ChallengeDetail = () => {
                 message={modalMessage}
                 onClose={() => setIsModalOpen(false)}
               />
-              {/* Nút Start Challenge chỉ hiển thị nếu require_deploy là true */}
-              {challenge && challenge.require_deploy && !isChallengeStarted && !isSubmitted && (
-                <button
-                  type="button"
-                  onClick={handleStartChallenge}
-                  className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${isChallengeStarted
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : "bg-green-600 hover:bg-green-700 text-white"
-                    }`}
-                >
-                  {isChallengeStarted && challenge.require_deploy ? "Stop Challenge" : "Start Challenge"}
-                </button>
-              )}
+            {/* Nút Start Challenge chỉ hiển thị nếu require_deploy là true */}
+            {challenge?.require_deploy && !isChallengeStarted && !isSubmitted && (
+  <button
+    type="button"
+    onClick={handleStartChallenge}
+    disabled={isStarting} // Disable button while starting
+    className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+      isStarting
+        ? "bg-gray-500 text-white cursor-not-allowed"
+        : "bg-green-600 hover:bg-green-700 text-white"
+    }`}
+  >
+    {isStarting ? "Starting..." : "Start Challenge"}
+  </button>
+)}
+
+{/* Display the Stop Challenge button if the challenge is started and require_deploy is true */}
+{isChallengeStarted && challenge?.require_deploy && (
+  <button
+    type="button"
+    onClick={handleStopChallenge}
+    className="w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white"
+  >
+    Stop Challenge
+  </button>
+)}
             </form>
 
           </div>
