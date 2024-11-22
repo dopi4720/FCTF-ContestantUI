@@ -16,7 +16,6 @@ const TicketList = () => {
   const navigate = useNavigate();
   const ticketTypes = ["Error", "Bug", "Issues", "Question"];
 
-
   const fetchTickets = async () => {
     try {
       const api = new ApiHelper(BASE_URL);

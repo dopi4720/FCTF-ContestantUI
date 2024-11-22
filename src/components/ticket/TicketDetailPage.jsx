@@ -36,9 +36,7 @@ const TicketDetailPage = () => {
               Ticket Details
             </h1>
             <div className="flex items-center space-x-4">
-              <span className="bg-white px-4 py-1 rounded-full text-theme-color-primary font-medium">
-                {ticket?.id}
-              </span>
+              
               <span 
                 className={`px-4 py-1 rounded-full ${ticket?.status.toLowerCase() === "open" ? "bg-green-500" : "bg-red-500"} text-white`}
               >

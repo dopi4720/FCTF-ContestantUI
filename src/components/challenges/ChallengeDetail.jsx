@@ -83,6 +83,8 @@ const ChallengeDetail = () => {
       console.error('Error downloading file:', error);
     }
   };
+ //aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  //SUA MODAL O DAY
   const Modal = ({ isOpen, message, title, onClose }) => {
     if (!isOpen) return null;
 
@@ -103,6 +105,8 @@ const ChallengeDetail = () => {
       </div>
     );
   };
+  
+  
 
   const HintUnlocks = async (hintId) => {
     const api = new ApiHelper(BASE_URL);
@@ -121,6 +125,7 @@ const ChallengeDetail = () => {
     }
   };
 
+  //CLICK UNLOCK TAIN DAYYYYYYYYYYYYYYYYYYYYYYYYY
   const handleUnlockHintClick = async (hintId) => {
     try {
       const response = await HintUnlocks(hintId);
@@ -135,7 +140,7 @@ const ChallengeDetail = () => {
           // Show error and fetch hint details
           const errorMessage = response.errors.target;
           setModalMessage(errorMessage);
-          setIsModalOpen(true); // Show the first modal
+          setIsModalOpen(true); 
         } else {
           // Default error message for other cases
           setModalMessage("Failed to unlock hint. Try again.");
@@ -150,50 +155,68 @@ const ChallengeDetail = () => {
   };
 
   useEffect(() => {
-    const fetchChallengeDetails = async () => {
-      const api = new ApiHelper(BASE_URL);
-      try {
-        const detailsResponse = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
-        setChallenge(detailsResponse.data);
-        setIsSubmitted(detailsResponse.data.solve_by_myteam)
-        if (detailsResponse.data.time_limit !== -1) {
-          setTimeLimit(detailsResponse.data.time_limit || null);
-          setTimeRemaining(detailsResponse.data.time_remaining)
-          if (detailsResponse.time_remaining > 0  || detailsResponse.time_remaining !== null) {
-            setUrl(detailsResponse.challenge_url)
-            setIsChallengeStarted(detailsResponse.is_started);
-          }
-        } else {
-          setTimeLimit(null)
-        }
-
-      } catch (err) {
-        console.error("Error fetching challenge:", err);
-      }
-    };
     fetchChallengeDetails();
   }, [id]);
+  
+
+  const fetchChallengeDetails = async () => {
+    const api = new ApiHelper(BASE_URL);
+  
+    try {
+      const detailsResponse = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
+      if (!detailsResponse.data) {
+        console.error("No data returned from challenge details API.");
+        return;
+      }
+      const data = detailsResponse.data;
+      setChallenge(data);
+      setIsSubmitted(data.solve_by_myteam);
+  
+      if (data.time_limit !== -1) {
+        setTimeLimit(data.time_limit * 60|| null);
+        setTimeRemaining(detailsResponse.time_remaining);
+  
+        if (detailsResponse.time_remaining > 0) {
+          setUrl(data.challenge_url || null);
+
+          setIsChallengeStarted(detailsResponse.is_started || false);
+          if(detailsResponse.is_started){
+            setUrl(data.challenge_url || null)
+          }
+        } else {
+          setUrl(null);
+          setIsChallengeStarted(false);
+        }
+      } else {
+        setTimeLimit(null);
+        setUrl(null);
+        setIsChallengeStarted(false);
+      }
+      return detailsResponse.time_remaining;
+    } catch (err) {
+      console.error("Error fetching challenge details:", err.message || err);
+    }
+  };
+
 
   useEffect(() => {
     if (isChallengeStarted && timeRemaining > 0) {
       timerRef.current = setInterval(() => {
         setTimeRemaining((prevTime) => {
           if (prevTime <= 1) {
-            clearInterval(timerRef.current);
-            setShowTimeUpAlert(true);
-            setisTimeOut(true)
+            clearInterval(timerRef.current); 
             return 0;
           }
-          return prevTime - 1;
+          return prevTime - 1; // Decrease time by 1 second
         });
       }, 1000);
     } else {
-      clearInterval(timerRef.current); // Clear interval if challenge stops or timeLeft changes
+      clearInterval(timerRef.current); 
     }
-
-    return () => clearInterval(timerRef.current);
+    return () => clearInterval(timerRef.current); // Cleanup on unmount
   }, [isChallengeStarted, timeRemaining]);
 
+  // SHOW HINT DETAILS DAYYYYYYYYYYYYYYYYYYYY
   const handeHintDetailClick = async (hintId) => {
     const hintDetailsResponse = await FetchHintDetails(hintId);
     if (hintDetailsResponse?.data) {
@@ -206,48 +229,52 @@ const ChallengeDetail = () => {
       setIsModalOpen(true)
     }
   }
-
+ //SUA CHUYEN TRANG KHI BAM START TAI HAM NAYYYYYYYYYYYYYYYYYYYYY
+  // CLICK START BUTTON
   const handleStartChallenge = async () => {
     if (!challengeId) {
       setError("Invalid challenge ID");
       return;
     }
-
+  
     const api = new ApiHelper(BASE_URL);
-    const generatedToken = localStorage.getItem("accessToken"); //fix this
-
+    const generatedToken = localStorage.getItem("accessToken");
+  
     setIsStarting(true);
     try {
       const response = await api.post(API_CHALLEGE_START, {
         challenge_id: challengeId,
         generatedToken,
       });
-
+  
       if (response.success) {
-        const startTime = Date.now();
-        localStorage.setItem(`challenge_${challengeId}_startTime`, startTime);
-        console.log(`Challenge url: ${response.challenge_url}`)
-        setUrl(response.challenge_url);
-
-        setTimeRemaining(timeRemaining * 60);
-        setShowTimeUpAlert(false);
-        setIsChallengeStarted(true);
-        setIsSubmitted(false);
-
-        if (response.challenge_url) {
-          setModalMessage(`Your connection info is: ${response?.challenge_url} `)
-          setIsModalOpen(true)
-          setUrl(response.challenge_url);
-          window.open(response.challenge_url, "_blank")
+        try {
+          const timeRemaining = await fetchChallengeDetails();
+          
+          setUrl(response.challenge_url || null); 
+          setIsChallengeStarted(true);
+          setIsSubmitted(false);
+  
+          if (timeRemaining !== null) {
+            setTimeRemaining(timeRemaining); 
+          }
+  
+          if (response.challenge_url) {
+            setModalMessage(`Your connection info is: ${response.challenge_url}`);
+            setIsModalOpen(true);
+            //SEND TO THE CONNECTION_URL, NHMA NO DANG BI DINH CA PATH (ex, /challenge)
+            window.open(response.challenge_url, "_blank");
+          }
+        } catch (detailsError) {
+          console.error("Error updating challenge details:", detailsError);
         }
-
       } else {
         console.error("Failed to start challenge:", response.error || "Unknown error");
       }
     } catch (err) {
-      console.error("Error starting challenge:", err);
+      console.error("Error starting challenge:", err.message || err);
     } finally {
-      setIsStarting(false); 
+      setIsStarting(false);
     }
   };
 
@@ -260,7 +287,7 @@ const ChallengeDetail = () => {
       if (response.isSuccess) {
         setIsChallengeStarted(false); 
         setTimeLeft(null); 
-        localStorage.removeItem(`challenge_${challengeId}_startTime`);
+        
         clearInterval(timerRef.current); 
         setModalMessage("Challenge stopped successfully.");
         setIsModalOpen(true);
@@ -311,10 +338,12 @@ const ChallengeDetail = () => {
 
   const formatTime = (seconds) => {
     if (seconds === null || !challenge?.require_deploy) return "--:--";
-    seconds = Math.floor(seconds);
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+    const hours = Math.floor(seconds / 3600);
+    const remainingSecondsAfterHours = seconds % 3600;
+    const minutes = Math.floor(remainingSecondsAfterHours / 60);
+    const remainingSeconds = remainingSecondsAfterHours % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}
+    :${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   const handleSubmit = (e) => {
@@ -345,24 +374,7 @@ const ChallengeDetail = () => {
                     <br />
                     <br />
 
-                    {challenge.files && (
-                      <div>
-                        <h3>File:</h3>
-                        <ul>
-                          {challenge.files.map((file, index) => (
-                            <li key={index}>
-                              <button
-                                onClick={() => handleDowloadFiles(file)}
-                                className="flex my-2 items-center bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                <FaDownload className="mr-2" /> {/* Thêm icon */}
-                                {getFileName(file)}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    
                   </h1>
 
                   <div className="bg-neutral-low p-4 rounded-md">
@@ -370,7 +382,23 @@ const ChallengeDetail = () => {
                       <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
                         {challenge.description}
                       </pre>
-
+                      {challenge.files && (
+      <div>
+        <h3 className="text-xl font-semibold mb-4">Files:</h3>
+          <div className="flex flex-wrap gap-4">
+      {challenge.files.map((file, index) => (
+        <button
+          key={index}
+          onClick={() => handleDowloadFiles(file)}
+          className="flex items-center bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <FaDownload className="mr-2" /> 
+          {getFileName(file)}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
                       {url && (
                         <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
                           Your connection info is: {url}
