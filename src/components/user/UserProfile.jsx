@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaLock, FaMedal, FaTrophy, FaUsers } from "react-icons/fa";
+import Swal from "sweetalert2";
 import { API_CHANGE_PASSWORD, API_TEAM_PERFORMANCE, API_TEAM_POINT, API_USER_PROFILE, BASE_URL } from "../../constants/ApiConstant";
 import { ACCESS_TOKEN_KEY } from "../../constants/LocalStorageKey";
 import ApiHelper from "../../utils/ApiHelper";
@@ -87,39 +88,72 @@ const UserProfile = () => {
         { name: "Cryptography Challenge", difficulty: "Medium", completed: true, progress: 100 }
     ];
     const handleChangePassword = async () => {
-        const api = new ApiHelper(BASE_URL);
         const { oldPassword, newPassword, confirmPassword } = passwordData;
-        const generatedToken= localStorage.getItem(ACCESS_TOKEN_KEY)
-    
+        const generatedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+        const api = new ApiHelper(BASE_URL);
         // Basic validation
         if (!oldPassword || !newPassword || !confirmPassword) {
-            alert("Please fill in all fields.");
+            showModalMessage("All fields are required!", "error");
             return;
         }
     
         if (newPassword !== confirmPassword) {
-            alert("New passwords do not match.");
+            showModalMessage("New password and confirm password do not match!", "error");
+            return;
+        }
+    
+        if (newPassword.length < 8) {
+            showModalMessage("New password must be at least 8 characters long.", "error");
             return;
         }
     
         try {
-            
+            // Use the postForm method
             const result = await api.postForm(`${API_CHANGE_PASSWORD}`, {
                 current_password: oldPassword,
                 new_password: newPassword,
                 generatedToken,
             });
-            
+    
+            // Handle API responses based on the message returned
             if (result && result.msg) {
-                alert(result.msg);
-                setShowPasswordModal(false); 
+                switch (result.msg) {
+                    case "Missing current or new password":
+                        showModalMessage("Please provide both current and new passwords.", "error");
+                        break;
+                    case "New password must be at least 8 characters long":
+                        showModalMessage("Your new password must have at least 8 characters.", "error");
+                        break;
+                    case "New password cannot be the same as the current password":
+                        showModalMessage("Your new password cannot be the same as the current password.", "error");
+                        break;
+                    case "Password updated successfully":
+                        showModalMessage("Password updated successfully!", "success");
+                        setShowPasswordModal(false); // Close the modal on success
+                        break;
+                    case "Current password is incorrect":
+                        showModalMessage("The current password you entered is incorrect.", "error");
+                        break;
+                    default:
+                        showModalMessage("An unexpected error occurred. Please try again later.", "error");
+                }
             } else {
-                alert("Failed to change password.");
+                showModalMessage("Failed to change password. Please try again.", "error");
             }
         } catch (error) {
             console.error("Error while changing password:", error);
-            alert("An error occurred. Please try again later.");
+            showModalMessage("An error occurred while communicating with the server. Please try again later.", "error");
         }
+    };
+    
+    // Utility function to display SweetAlert2 modal messages
+    const showModalMessage = (message, icon = "info") => {
+        Swal.fire({
+            title: icon === "success" ? "Success!" : "Error!",
+            text: message,
+            icon: icon,
+            confirmButtonText: "OK",
+        });
     };
 
     return (

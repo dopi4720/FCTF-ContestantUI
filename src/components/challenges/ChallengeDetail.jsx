@@ -3,9 +3,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { FaDownload } from 'react-icons/fa';
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
+import Swal from "sweetalert2";
 import { API_CHALLEGE_START, API_CHALLENGE_STOP, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
-
 const ChallengeDetail = () => {
     const { id } = useParams();
     const challengeId = id ? parseInt(id, 10) : undefined;
@@ -29,6 +29,7 @@ const ChallengeDetail = () => {
     const [hint, setHint] = useState(null)
     const [isStarting, setIsStarting] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState(null)
+
 
     const fetchHints = async () => {
         const api = new ApiHelper(BASE_URL);
@@ -71,23 +72,19 @@ const ChallengeDetail = () => {
         return fullName.split("?")[0];
     };
 
-
     const handleDowloadFiles = async (filePath) => {
         const api = new ApiHelper(BASE_URL);
         try {
             const response = await api.get(`${BASE_URL}${filePath}`);
             let fileName = getFileName(filePath)
-
             saveAs(`${BASE_URL}${filePath}`, fileName)
         } catch (error) {
             console.error('Error downloading file:', error);
         }
     };
-
     //SUA MODAL O DAY
     const Modal = ({ isOpen, message, title, onClose }) => {
         if (!isOpen) return null;
-
         return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                 <div className="bg-white p-7 rounded-lg shadow-xl max-w-xl w-1/2 sm:max-w-full" >
@@ -106,8 +103,6 @@ const ChallengeDetail = () => {
         );
     };
 
-
-
     const HintUnlocks = async (hintId) => {
         const api = new ApiHelper(BASE_URL);
         try {
@@ -124,33 +119,113 @@ const ChallengeDetail = () => {
             return { success: false, errors: error.response?.data?.errors || {} };
         }
     };
-
     //CLICK UNLOCK TAIN DAYYYYYYYYYYYYYYYYYYYYYYYYY
-    const handleUnlockHintClick = async (hintId) => {
+    const handleUnlockHintClick = async (hintId, hintCost) => {
         try {
-            const response = await HintUnlocks(hintId);
-            if (response?.success) {
-                setModalMessage("Unlock success")
-                setIsModalOpen(true)
-            } else {
-                if (response.errors?.score) {
-                    const errorMessage = response.errors.score;
-                    setModalMessage(`${errorMessage}`);
-                } else if (response.errors?.target) {
-                    // Show error and fetch hint details
-                    const errorMessage = response.errors.target;
-                    setModalMessage(errorMessage);
-                    setIsModalOpen(true);
+            // Show SweetAlert confirmation before proceeding
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: `Do you want to unlock this hint with a cost of ${hintCost} points?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, unlock it!',
+                cancelButtonText: 'No, cancel',
+                reverseButtons: true, // This makes the "No, cancel" button appear on the left
+            });
+            // If user confirms, proceed with unlocking the hint
+            if (result.isConfirmed) {
+                // Call the unlock API
+                const response = await HintUnlocks(hintId);
+                if (response?.success) {
+                    // If the hint was unlocked successfully, fetch and show the details
+                    if (hintDetailsResponse?.data) {
+                        // Show success with hint details using SweetAlert
+                        Swal.fire({
+                            title: 'Unlock Success!',
+                            text: `Hint unlocked! Details: ${hintDetailsResponse.data.content || "No content available."}`,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                        });
+                    } else {
+                        // Show message when hint is unlocked but no details are available
+                        Swal.fire({
+                            title: 'Unlock Success!',
+                            text: "Hint unlocked, but no details available.",
+                            icon: 'info',
+                            confirmButtonText: 'OK',
+                        });
+                    }
                 } else {
-                    // Default error message for other cases
-                    setModalMessage("Failed to unlock hint. Try again.");
+                    // Handle errors based on the response
+                    if (response.errors?.score) {
+                        const errorMessage = response.errors.score;
+                    Swal.fire({
+                        title: 'Error!',
+                        text: errorMessage,
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                    });
+                    } else if (response.errors?.target) {
+                        // Check if the error message indicates that the target is already unlocked
+                        const errorMessage = response.errors.target;
+                        console.log(errorMessage)
+                        if (errorMessage === "You've already unlocked this this target") {
+                            const hintDetailsResponse = await FetchHintDetails(hintId);
+                            if (hintDetailsResponse?.data) {
+                                Swal.fire({
+                                    title: 'Already Unlocked',
+                                    text: `You've already unlocked this hint. Details: ${hintDetailsResponse.data.content || "No content available."}`,
+                                    icon: 'info',
+                                    confirmButtonText: 'OK',
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Already Unlocked',
+                                    text: "You've already unlocked this hint, but no details are available.",
+                                    icon: 'info',
+                                    confirmButtonText: 'OK',
+                                });
+                            }
+                        } else {
+                            // Show the target error message if it's something else
+                            Swal.fire({
+                                title: 'Error!',
+                                text: errorMessage,
+                                icon: 'error',
+                                confirmButtonText: 'OK',
+                            });
+                        }
+                    } else {
+                        // Default error message for other cases
+                        Swal.fire({
+                            title: 'Error!',
+                            text: errorMessage,
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                        });
+                    }
                 }
+            } else {
+                // If the user cancels, show a cancellation message (optional)
+                Swal.fire({
+                    title: 'Cancelled',
+                    text: 'Unlocking the hint was cancelled.',
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                });
             }
         } catch (error) {
-            setModalMessage("An error occurred while processing your request.");
-            console.error('Error in handleHintClick:', error);
+            // Handle unexpected errors
+            Swal.fire({
+                title: 'Error!',
+                text: "An error occurred while processing your request.",
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+            console.error('Error in handleUnlockHintClick:', error);
         } finally {
-            setIsModalOpen(true); // Ensure the modal opens
+            // Ensure the modal opens with the appropriate message
+            setIsModalOpen(false);
         }
     };
 
@@ -158,10 +233,8 @@ const ChallengeDetail = () => {
         fetchChallengeDetails();
     }, [id]);
 
-
     const fetchChallengeDetails = async () => {
         const api = new ApiHelper(BASE_URL);
-
         try {
             const detailsResponse = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
             if (!detailsResponse.data) {
@@ -171,14 +244,11 @@ const ChallengeDetail = () => {
             const data = detailsResponse.data;
             setChallenge(data);
             setIsSubmitted(data.solve_by_myteam);
-
             if (data.time_limit !== -1) {
                 setTimeLimit(data.time_limit * 60 || null);
                 setTimeRemaining(detailsResponse.time_remaining);
-
                 if (detailsResponse.time_remaining > 0) {
-                    setUrl(data.challenge_url || null);
-
+                    setUrl(detailsResponse.challenge_url || null);
                     setIsChallengeStarted(detailsResponse.is_started || false);
                     if (detailsResponse.is_started) {
                         setUrl(data.challenge_url || null)
@@ -198,7 +268,6 @@ const ChallengeDetail = () => {
         }
     };
 
-
     useEffect(() => {
         if (isChallengeStarted && timeRemaining > 0) {
             timerRef.current = setInterval(() => {
@@ -215,69 +284,97 @@ const ChallengeDetail = () => {
         }
         return () => clearInterval(timerRef.current); // Cleanup on unmount
     }, [isChallengeStarted, timeRemaining]);
-
     // SHOW HINT DETAILS DAYYYYYYYYYYYYYYYYYYYY
-    const handeHintDetailClick = async (hintId) => {
-        const hintDetailsResponse = await FetchHintDetails(hintId);
-        if (hintDetailsResponse?.data) {
-            setModalMessage(
-                `Hint: ${hintDetailsResponse.data.content || "Details not available"} `
-            );
-            setIsModalOpen(true)
-        } else {
-            setModalMessage("Unable to fetch hint details.");
-            setIsModalOpen(true)
-        }
-    }
-
+    // const handeHintDetailClick = async (hintId) => {
+    //     const hintDetailsResponse = await FetchHintDetails(hintId);
+    //     if (hintDetailsResponse?.data) {
+    //         setModalMessage(
+    //             `Hint: ${hintDetailsResponse.data.content || "Details not available"} `
+    //         );
+    //         setIsModalOpen(true)
+    //     } else {
+    //         setModalMessage("Unable to fetch hint details.");
+    //         setIsModalOpen(true)
+    //     }
+    // }
+    // const handleHintDetailClick = (hint) => {
+    //     setSelectedHint(hint); // Store the clicked hint in state
+    //     setIsConfirmModalOpen(true); // Open the confirmation modal
+    // };
     // CLICK START BUTTON
     const handleStartChallenge = async () => {
         if (!challengeId) {
-            setError("Invalid challenge ID");
+            Swal.fire({
+                title: 'Error!',
+                text: 'Invalid challenge ID',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
             return;
         }
-
+    
         const api = new ApiHelper(BASE_URL);
         const generatedToken = localStorage.getItem("accessToken");
-
         setIsStarting(true);
+    
         try {
             const response = await api.post(API_CHALLEGE_START, {
                 challenge_id: challengeId,
                 generatedToken,
             });
-
+    
             if (response.success) {
                 try {
                     const timeRemaining = await fetchChallengeDetails();
-
+    
                     setUrl(response.challenge_url || null);
                     setIsChallengeStarted(true);
                     setIsSubmitted(false);
-
+    
                     if (timeRemaining !== null) {
                         setTimeRemaining(timeRemaining);
                     }
-
+    
                     if (response.challenge_url) {
-                        // setModalMessage(`Your connection info is: ${response.challenge_url}`);
-                        // setIsModalOpen(true);
-                        //SEND TO THE CONNECTION_URL, NHMA NO DANG BI DINH CA PATH (ex, /challenge)
                         const currentSchema = window.location.protocol;
                         const challengeUrl = `${currentSchema}//${response.challenge_url}`;
                         window.open(challengeUrl, "_blank");
+    
+                        // Success message with SweetAlert
+                        Swal.fire({
+                            title: 'Challenge Started!',
+                            text: `Your challenge is now live. Click here to access: ${challengeUrl}`,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                        });
                     }
                 } catch (detailsError) {
                     console.error("Error updating challenge details:", detailsError);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to fetch challenge details.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                    });
                 }
             } else {
-                setModalMessage('Fail to start new challenge,', response.error)
-                setIsModalOpen(true)
+                // If the response indicates failure to start the challenge
+                Swal.fire({
+                    title: 'Error!',
+                    text: `Failed to start the challenge. ${response.error || "Unknown error"}`,
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
                 console.error("Failed to start challenge:", response.error || "Unknown error");
             }
         } catch (err) {
-            setModalMessage('Fail to start new challenge,', err)
-            setIsModalOpen(true)
+            // If an error occurs during the API call
+            Swal.fire({
+                title: 'Error!',
+                text: `Failed to start the challenge. ${err.message || err}`,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
             console.error("Error starting challenge:", err.message || err);
         } finally {
             setIsStarting(false);
@@ -290,19 +387,37 @@ const ChallengeDetail = () => {
             const response = await api.postForm(API_CHALLENGE_STOP, {
                 challenge_id: challengeId,
             });
+    
             if (response.isSuccess) {
                 setIsChallengeStarted(false);
                 setTimeLeft(null);
-
                 clearInterval(timerRef.current);
-                setModalMessage("Challenge stopped successfully.");
-                setIsModalOpen(true);
+                setUrl(null)
+                // Success message with SweetAlert
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Challenge stopped successfully.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                });
             } else {
-                setModalMessage("Fail to stop challenge! Try Again");
-                setIsModalOpen(true);
+                // If stopping the challenge fails
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Failed to stop challenge. Try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
                 console.error("Failed to stop challenge:", response.error || "Unknown error");
             }
         } catch (err) {
+            // If an error occurs during the API call
+            Swal.fire({
+                title: 'Error!',
+                text: `Error stopping challenge: ${err.message || err}`,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
             console.error("Error stopping challenge:", err);
         }
     };
@@ -310,34 +425,70 @@ const ChallengeDetail = () => {
     const handleSubmitFlag = async () => {
         setIsSubmittingFlag(true);
         setSubmissionError(null);
-        const api = new ApiHelper(BASE_URL)
+        const api = new ApiHelper(BASE_URL);
+        
         try {
             const data = {
                 challenge_id: challengeId,
                 submission: answer,
                 generatedToken: localStorage.getItem("accessToken")
             };
-            const response = await api.postForm(SUBMIT_FLAG, data)
+    
+            const response = await api.postForm(SUBMIT_FLAG, data);
+    
             if (response?.data.status === "correct") {
-                setModalMessage(response.data.message);
-                setIsSubmitted(true)
-                setTimeRemaining(null)
-
+                // Success message for correct flag
+                Swal.fire({
+                    title: 'Correct Flag!',
+                    text: response.data.message || 'You have solved the challenge!',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                });
+                setIsSubmitted(true);
+                setTimeRemaining(null);
             } else if (response?.data.status === "already_solved") {
-                setModalMessage(response.data.message || "Solved");
+                // Information message for already solved
+                Swal.fire({
+                    title: 'Already Solved!',
+                    text: response.data.message || 'This challenge has already been solved.',
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                });
             } else if (response?.data.status === "ratelimited") {
-                setModalMessage(response?.data.message)
+                // Warning message for rate-limited submissions
+                Swal.fire({
+                    title: 'Rate Limit Exceeded!',
+                    text: response.data.message || 'You have exceeded the submission rate limit.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK',
+                });
             } else if (response?.status_code) {
-                console.log('Hello')
-                setModalMessage("Your team have zero attempts left for this challenge")
+                // Error message for no attempts left
+                Swal.fire({
+                    title: 'No Attempts Left!',
+                    text: "Your team has zero attempts left for this challenge.",
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+            } else {
+                // Error message for incorrect flag
+                Swal.fire({
+                    title: 'Incorrect Flag!',
+                    text: response?.data?.message || "The flag you entered is incorrect.",
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+                setSubmissionError(response?.data.message || "Incorrect flag");
             }
-            else {
-                setSubmissionError(response?.data?.message || "Incorrect flag");
-                setModalMessage(response?.data.message || "Incorrect flag");
-            }
-            setIsModalOpen(true);
+    
         } catch (error) {
-            setSubmissionError("Error submitting flag.");
+            // Handle any errors during submission
+            Swal.fire({
+                title: 'Error!',
+                text: "Error submitting flag. Please try again later.",
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
             console.error("Error submitting flag:", error);
         } finally {
             setIsSubmittingFlag(false);
@@ -380,10 +531,7 @@ const ChallengeDetail = () => {
                                         Type: {challenge.type}
                                         <br />
                                         <br />
-
-
                                     </h1>
-
                                     <div className="bg-neutral-low p-4 rounded-md">
                                         <div className="bg-white p-4 rounded-md overflow-y-auto max-h-96">
                                             <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
@@ -410,7 +558,6 @@ const ChallengeDetail = () => {
                                                     Your connection info is: {url}
                                                 </pre>
                                             )}
-
                                         </div>
                                     </div>
                                 </>
@@ -430,10 +577,8 @@ const ChallengeDetail = () => {
                                 {isChallengeStarted && (
                                     <span className='font-bold'>{formatTime(timeRemaining)}</span>
                                 )}
-
                             </div>
                         </div>
-
                         {showTimeUpAlert && (
                             <div className="bg-theme-color-primary-dark text-white p-4 rounded-lg mb-6 flex items-center justify-center">
                                 <FiAlertCircle className="mr-2" />
@@ -446,21 +591,17 @@ const ChallengeDetail = () => {
                             <div className="grid grid-cols-3 gap-2">
                                 {hints.map((hint) => (
                                     <div key={hint.id}>
-                                        <button type="button" className="w-full h-16 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300  items-center justify-center font-medium text-theme-color-primary hover:bg-gray-5" onClick={() => handeHintDetailClick(hint.id)}>
+                                        <button type="button" className="w-full h-16 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300  items-center justify-center font-medium text-theme-color-primary hover:bg-gray-5" 
+                                        onClick={() => handleUnlockHintClick(hint.id, hint.cost)}>
                                             <div className="text-center">Hint</div>
                                             <div className="text-center">{hint.cost} Points</div>
                                         </button>
-                                        <button
-                                            onClick={() => handleUnlockHintClick(hint.id)}
-                                            className="w-full h-16 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center font-medium text-theme-color-primary hover:bg-gray-50"
-                                            type="button"
-                                        >
-                                            Unlock
-                                        </button>
+                                        
                                     </div>
                                 ))}
                             </div>
                         </div>
+                        
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label htmlFor="answer" className="block text-theme-color-neutral-content font-medium mb-2">
@@ -516,7 +657,6 @@ const ChallengeDetail = () => {
                                     {isStarting ? "Starting..." : "Start Challenge"}
                                 </button>
                             )}
-
                             {/* Display the Stop Challenge button if the challenge is started and require_deploy is true */}
                             {isChallengeStarted && challenge?.require_deploy && !isSubmitted &&(
                                 <button
