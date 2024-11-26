@@ -29,6 +29,7 @@ const ChallengeDetail = () => {
     const [hint, setHint] = useState(null)
     const [isStarting, setIsStarting] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState(null)
+    const [isFetchDetailSuccess, setFetchDetailSuccess] = useState(false);
     const descriptionRef = useRef(null);
 
     const handleRadioChange = (event) => {
@@ -41,18 +42,20 @@ const ChallengeDetail = () => {
     useEffect(() => {
         const container = descriptionRef.current;
 
-        // Gắn sự kiện `change` vào container
-        if (container) {
-            container.addEventListener("change", handleRadioChange);
+        console.log(container)
+        if (isFetchDetailSuccess) {
+            // Gắn sự kiện `change` vào container
+            if (container) {
+                container.addEventListener("change", handleRadioChange);
+            }
         }
-
         // Dọn dẹp sự kiện khi component bị unmount
         return () => {
             if (container) {
                 container.removeEventListener("change", handleRadioChange);
             }
         };
-    }, []);
+    }, [isFetchDetailSuccess]);
 
     const fetchHints = async () => {
         const api = new ApiHelper(BASE_URL);
@@ -257,6 +260,7 @@ const ChallengeDetail = () => {
     }, [id]);
 
     const fetchChallengeDetails = async () => {
+        setFetchDetailSuccess(false);
         const api = new ApiHelper(BASE_URL);
         try {
             const detailsResponse = await api.get(`${GET_CHALLENGE_DETAILS}/${id}`);
@@ -285,6 +289,7 @@ const ChallengeDetail = () => {
                 setUrl(null);
                 setIsChallengeStarted(false);
             }
+            setFetchDetailSuccess(true);
             return detailsResponse.time_remaining;
         } catch (err) {
             console.error("Error fetching challenge details:", err.message || err);
