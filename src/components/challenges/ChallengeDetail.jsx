@@ -29,7 +29,30 @@ const ChallengeDetail = () => {
     const [hint, setHint] = useState(null)
     const [isStarting, setIsStarting] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState(null)
+    const descriptionRef = useRef(null);
 
+    const handleRadioChange = (event) => {
+        if (event.target.name === "radio-group") {
+            console.log(event.target.value)
+            setAnswer(event.target.value);
+        }
+    };
+
+    useEffect(() => {
+        const container = descriptionRef.current;
+
+        // Gắn sự kiện `change` vào container
+        if (container) {
+            container.addEventListener("change", handleRadioChange);
+        }
+
+        // Dọn dẹp sự kiện khi component bị unmount
+        return () => {
+            if (container) {
+                container.removeEventListener("change", handleRadioChange);
+            }
+        };
+    }, []);
 
     const fetchHints = async () => {
         const api = new ApiHelper(BASE_URL);
@@ -159,12 +182,12 @@ const ChallengeDetail = () => {
                     // Handle errors based on the response
                     if (response.errors?.score) {
                         const errorMessage = response.errors.score;
-                    Swal.fire({
-                        title: 'Error!',
-                        text: errorMessage,
-                        icon: 'error',
-                        confirmButtonText: 'OK',
-                    });
+                        Swal.fire({
+                            title: 'Error!',
+                            text: errorMessage,
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                        });
                     } else if (response.errors?.target) {
                         // Check if the error message indicates that the target is already unlocked
                         const errorMessage = response.errors.target;
@@ -312,34 +335,34 @@ const ChallengeDetail = () => {
             });
             return;
         }
-    
+
         const api = new ApiHelper(BASE_URL);
         const generatedToken = localStorage.getItem("accessToken");
         setIsStarting(true);
-    
+
         try {
             const response = await api.post(API_CHALLEGE_START, {
                 challenge_id: challengeId,
                 generatedToken,
             });
-    
+
             if (response.success) {
                 try {
                     const timeRemaining = await fetchChallengeDetails();
-    
+
                     setUrl(response.challenge_url || null);
                     setIsChallengeStarted(true);
                     setIsSubmitted(false);
-    
+
                     if (timeRemaining !== null) {
                         setTimeRemaining(timeRemaining);
                     }
-    
+
                     if (response.challenge_url) {
                         const currentSchema = window.location.protocol;
                         const challengeUrl = `${currentSchema}//${response.challenge_url}`;
                         window.open(challengeUrl, "_blank");
-    
+
                         // Success message with SweetAlert
                         Swal.fire({
                             title: 'Challenge Started!',
@@ -387,7 +410,7 @@ const ChallengeDetail = () => {
             const response = await api.postForm(API_CHALLENGE_STOP, {
                 challenge_id: challengeId,
             });
-    
+
             if (response.isSuccess) {
                 setIsChallengeStarted(false);
                 setTimeLeft(null);
@@ -426,16 +449,16 @@ const ChallengeDetail = () => {
         setIsSubmittingFlag(true);
         setSubmissionError(null);
         const api = new ApiHelper(BASE_URL);
-        
+
         try {
             const data = {
                 challenge_id: challengeId,
                 submission: answer,
                 generatedToken: localStorage.getItem("accessToken")
             };
-    
+
             const response = await api.postForm(SUBMIT_FLAG, data);
-    
+
             if (response?.data.status === "correct") {
                 // Success message for correct flag
                 Swal.fire({
@@ -480,7 +503,7 @@ const ChallengeDetail = () => {
                 });
                 setSubmissionError(response?.data.message || "Incorrect flag");
             }
-    
+
         } catch (error) {
             // Handle any errors during submission
             Swal.fire({
@@ -535,7 +558,14 @@ const ChallengeDetail = () => {
                                     <div className="bg-neutral-low p-4 rounded-md">
                                         <div className="bg-white p-4 rounded-md overflow-y-auto max-h-96">
                                             <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
-                                                {challenge.description}
+                                                {challenge.type === "multiple_choice" ? (
+                                                    <div
+                                                        ref={descriptionRef}
+                                                        dangerouslySetInnerHTML={{ __html: challenge.description }}
+                                                    />
+                                                ) : (
+                                                    <div>{challenge.description}</div>
+                                                )}
                                             </pre>
                                             {challenge.files && (
                                                 <div>
@@ -591,35 +621,37 @@ const ChallengeDetail = () => {
                             <div className="grid grid-cols-3 gap-2">
                                 {hints.map((hint) => (
                                     <div key={hint.id}>
-                                        <button type="button" className="w-full h-16 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300  items-center justify-center font-medium text-theme-color-primary hover:bg-gray-5" 
-                                        onClick={() => handleUnlockHintClick(hint.id, hint.cost)}>
+                                        <button type="button" className="w-full h-16 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300  items-center justify-center font-medium text-theme-color-primary hover:bg-gray-5"
+                                            onClick={() => handleUnlockHintClick(hint.id, hint.cost)}>
                                             <div className="text-center">Hint</div>
                                             <div className="text-center">{hint.cost} Points</div>
                                         </button>
-                                        
+
                                     </div>
                                 ))}
                             </div>
                         </div>
-                        
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label htmlFor="answer" className="block text-theme-color-neutral-content font-medium mb-2">
-                                    Your Answer
-                                </label>
-                                <textarea
-                                    id="answer"
-                                    value={answer}
-                                    onChange={(e) => setAnswer(e.target.value)}
-                                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-theme-color-primary focus:border-transparent ${error ? "border-red-500" : "border-theme-color-neutral"}`}
-                                    rows="6"
-                                    placeholder="Enter your solution here..."
-                                    disabled={isSubmitted || (challenge?.require_deploy && !isChallengeStarted)}
-                                    aria-label="Answer input field"
-                                />
-                                {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-                            </div>
 
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            {challenge?.type !== "multiple_choice" && (
+                                <div>
+                                    <label htmlFor="answer" className="block text-theme-color-neutral-content font-medium mb-2">
+                                        Your Answer
+                                    </label>
+                                    <textarea
+                                        id="answer"
+                                        value={answer}
+                                        onChange={(e) => setAnswer(e.target.value)}
+                                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-theme-color-primary focus:border-transparent ${error ? "border-red-500" : "border-theme-color-neutral"
+                                            }`}
+                                        rows="6"
+                                        placeholder="Enter your solution here..."
+                                        disabled={isSubmitted || (challenge?.require_deploy && !isChallengeStarted)}
+                                        aria-label="Answer input field"
+                                    />
+                                    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+                                </div>
+                            )}
                             <button
                                 onClick={handleSubmitFlag}
                                 type="submit"
@@ -658,7 +690,7 @@ const ChallengeDetail = () => {
                                 </button>
                             )}
                             {/* Display the Stop Challenge button if the challenge is started and require_deploy is true */}
-                            {isChallengeStarted && challenge?.require_deploy && !isSubmitted &&(
+                            {isChallengeStarted && challenge?.require_deploy && !isSubmitted && (
                                 <button
                                     type="button"
                                     onClick={handleStopChallenge}
