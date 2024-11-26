@@ -80,16 +80,16 @@ class ApiHelper {
   }
 
   
-  async patch(url, params = {}) {
+  async patch(url, data = {}, additionalHeaders = {}) {
     try {
-      const headers = this._getAuthHeaders();
-      const response = await this.api.patch(url, { params, headers });
-      return response.data;
+        const headers = { ...this._getAuthHeaders(), ...additionalHeaders };
+        const response = await this.api.patch(url, data, { headers });
+        return response.data; // Directly return the parsed data
     } catch (error) {
-      console.error("PATCH request error:", error);
-      throw error;
+        console.error("PATCH request error:", error);
+        throw error; // Ensure errors propagate to the calling code
     }
-  }
+}
 }
 
 export default ApiHelper;

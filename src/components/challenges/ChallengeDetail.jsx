@@ -366,15 +366,27 @@ const ChallengeDetail = () => {
                     if (response.challenge_url) {
                         const currentSchema = window.location.protocol;
                         const challengeUrl = `${currentSchema}//${response.challenge_url}`;
-                        // window.open(challengeUrl, "_blank");
-
-                        // Success message with SweetAlert
-                        Swal.fire({
-                            title: 'Challenge Started!',
-                            html: `Your challenge is now live. Click <a href="${challengeUrl}" target="_blank" style="color: blue; text-decoration: underline;">here</a> to access it.`,
-                            icon: 'success',
-                            confirmButtonText: 'OK',
-                        });
+                    
+                        // Regular expression to check if `challengeUrl` contains a valid domain name
+                        const isValidUrl = /^https?:\/\/[^\s/$.?#].[^\s]*$/.test(challengeUrl);
+                    
+                        if (isValidUrl) {
+                            // Success message with a clickable link
+                            Swal.fire({
+                                title: 'Challenge Started!',
+                                html: `Your challenge is now live. Click <a href="${challengeUrl}" target="_blank" style="color: blue; text-decoration: underline;">here</a> to access it.`,
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                            });
+                        } else {
+                            // Success message with plain text
+                            Swal.fire({
+                                title: 'Challenge Started!',
+                                text: `Your challenge is now live. Access information: ${response.challenge_url}`,
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                            });
+                        }
                     }
                 } catch (detailsError) {
                     console.error("Error updating challenge details:", detailsError);

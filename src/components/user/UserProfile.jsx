@@ -22,6 +22,41 @@ const UserProfile = () => {
     });
     const [finishPercent, setFinishPercent] = useState(75);
 
+    const [passwordStrength, setPasswordStrength] = useState("");
+    const [passwordCriteria, setPasswordCriteria] = useState({
+        minLength: false,
+        uppercase: false,
+        lowercase: false,
+        number: false,
+        specialChar: false
+    });
+
+    const validatePassword = (password) => {
+        const criteria = {
+            minLength: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /\d/.test(password),
+            specialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+        };
+        setPasswordCriteria(criteria);
+
+        const strength =
+            Object.values(criteria).filter(Boolean).length >= 4
+                ? "Strong"
+                : "Weak";
+        setPasswordStrength(strength);
+    };
+
+    const handlePasswordChange = (e) => {
+        const { name, value } = e.target;
+        setPasswordData((prev) => ({ ...prev, [name]: value }));
+
+        if (name === "newPassword") {
+            validatePassword(value);
+        }
+    };
+
     useEffect(() => {
         fetchUserInfo();
         fetchTeamPointInfo();
@@ -108,53 +143,51 @@ const UserProfile = () => {
         }
     
         try {
-            const result = await api.patch(`${API_USER_PROFILE}`, {
-                confirm: oldPassword,
-                password: newPassword,
-                
+            const response = await api.patch(`${API_USER_PROFILE}`, {
+                params: {
+                    password: newPassword,
+                    confirm: oldPassword,
+                },
             });
-    
-            // Handle API responses based on the message returned
-            if (response.status === 200) {
-                const result = response.data;
-                if (result.msg === "Password updated successfully.") {
-                    showModalMessage("Password updated successfully!", "success");
-                    setShowPasswordModal(false);
-                } else {
-                    showModalMessage("Unexpected success response. Please check.", "error");
-                }
-            } else if (response.status === 400) {
-                console.log('dm')
-                const result = response.data;
-                // Display the backend message if provided
-                if (result && result.msg) {
-                    switch (result.msg) {
+        
+            if (response.success) {
+                showModalMessage("Password updated successfully!", "success");
+                setShowPasswordModal(false);
+            } else {
+                showModalMessage(response.errors || "Unexpected error occurred.", "error");
+            }
+        } catch (error) {
+            if (error.response) {
+                const { status, data } = error.response;
+                if (status === 400 && data && data.errors) {
+                    switch (data.errors) {
                         case "Both 'password' and 'confirm' fields are required.":
                             showModalMessage("Please provide both current and new passwords.", "error");
                             break;
-                        case "Password does not meet the required criteria.":
-                            showModalMessage("Your new password don't match the required criteria", "error");
-                            break;
+                            case "Password does not meet the required criteria.":
+                                showModalMessage(
+                                    "Your new password doesn't match the required criteria. " +
+                                    "It must contain at least one letter (uppercase or lowercase), " +
+                                    "at least one digit, at least one special character (@$!%*#?&), " +
+                                    "and be at least 8 characters long.",
+                                    "error"
+                                );
+                                break;
                         case "Password and confirm must not be the same.":
-                            showModalMessage("Password and confirm must not be the same.", "error");
+                            showModalMessage("Password and old password must not be the same.", "error");
                             break;
-                        case "Current password is incorrect.":
-                            showModalMessage("The current password you entered is incorrect.", "error");
+                        case "Authentication failed.":
+                            showModalMessage("Authentication failed. Please log in again.", "error");
                             break;
                         default:
-                            showModalMessage(result.msg || "An unexpected error occurred.", "error");
+                            showModalMessage(data.errors || "An unexpected error occurred.", "error");
                     }
                 } else {
-                    showModalMessage("An error occurred. Please check your input.", "error");
+                    showModalMessage("An unexpected error occurred. Please try again.", "error");
                 }
             } else {
-                // Handle other non-2xx statuses
-                showModalMessage("An unexpected status code was returned.", "error");
+                showModalMessage("A network error occurred. Please check your connection.", "error");
             }
-        } catch (error) {
-            // Handle actual network errors or unexpected issues
-            console.error("Error while changing password:", error);
-            showModalMessage("An error occurred while communicating with the server. Please try again later.", "error");
         }
     };
     
