@@ -79,6 +79,7 @@ class ApiHelper {
     }
   }
 
+  
   async patch(url, params = {}) {
     try {
       const headers = this._getAuthHeaders();

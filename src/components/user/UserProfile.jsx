@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaLock, FaMedal, FaTrophy, FaUsers } from "react-icons/fa";
 import Swal from "sweetalert2";
-import { API_CHANGE_PASSWORD, API_TEAM_PERFORMANCE, API_TEAM_POINT, API_USER_PROFILE, BASE_URL } from "../../constants/ApiConstant";
+import { API_TEAM_PERFORMANCE, API_TEAM_POINT, API_USER_PROFILE, BASE_URL } from "../../constants/ApiConstant";
 import { ACCESS_TOKEN_KEY } from "../../constants/LocalStorageKey";
 import ApiHelper from "../../utils/ApiHelper";
 import PerformanceChart from "./PerformanceChart";
@@ -108,39 +108,51 @@ const UserProfile = () => {
         }
     
         try {
-            // Use the postForm method
-            const result = await api.postForm(`${API_CHANGE_PASSWORD}`, {
-                current_password: oldPassword,
-                new_password: newPassword,
-                generatedToken,
+            const result = await api.patch(`${API_USER_PROFILE}`, {
+                confirm: oldPassword,
+                password: newPassword,
+                
             });
     
             // Handle API responses based on the message returned
-            if (result && result.msg) {
-                switch (result.msg) {
-                    case "Missing current or new password":
-                        showModalMessage("Please provide both current and new passwords.", "error");
-                        break;
-                    case "New password must be at least 8 characters long":
-                        showModalMessage("Your new password must have at least 8 characters.", "error");
-                        break;
-                    case "New password cannot be the same as the current password":
-                        showModalMessage("Your new password cannot be the same as the current password.", "error");
-                        break;
-                    case "Password updated successfully":
-                        showModalMessage("Password updated successfully!", "success");
-                        setShowPasswordModal(false); // Close the modal on success
-                        break;
-                    case "Current password is incorrect":
-                        showModalMessage("The current password you entered is incorrect.", "error");
-                        break;
-                    default:
-                        showModalMessage("An unexpected error occurred. Please try again later.", "error");
+            if (response.status === 200) {
+                const result = response.data;
+                if (result.msg === "Password updated successfully.") {
+                    showModalMessage("Password updated successfully!", "success");
+                    setShowPasswordModal(false);
+                } else {
+                    showModalMessage("Unexpected success response. Please check.", "error");
+                }
+            } else if (response.status === 400) {
+                console.log('dm')
+                const result = response.data;
+                // Display the backend message if provided
+                if (result && result.msg) {
+                    switch (result.msg) {
+                        case "Both 'password' and 'confirm' fields are required.":
+                            showModalMessage("Please provide both current and new passwords.", "error");
+                            break;
+                        case "Password does not meet the required criteria.":
+                            showModalMessage("Your new password don't match the required criteria", "error");
+                            break;
+                        case "Password and confirm must not be the same.":
+                            showModalMessage("Password and confirm must not be the same.", "error");
+                            break;
+                        case "Current password is incorrect.":
+                            showModalMessage("The current password you entered is incorrect.", "error");
+                            break;
+                        default:
+                            showModalMessage(result.msg || "An unexpected error occurred.", "error");
+                    }
+                } else {
+                    showModalMessage("An error occurred. Please check your input.", "error");
                 }
             } else {
-                showModalMessage("Failed to change password. Please try again.", "error");
+                // Handle other non-2xx statuses
+                showModalMessage("An unexpected status code was returned.", "error");
             }
         } catch (error) {
+            // Handle actual network errors or unexpected issues
             console.error("Error while changing password:", error);
             showModalMessage("An error occurred while communicating with the server. Please try again later.", "error");
         }

@@ -31,12 +31,15 @@ const Template = ({ children }) => {
         }
     }, [navigate]);
 
+    const handleLogoClick= ()=>{
+        navigate('/')
+    }
     return (
         <div className="min-h-screen flex flex-col">
             <nav className="bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
-                        <div className="flex-shrink-0 w-1/4">
+                        <div className="flex-shrink-0 w-1/4" onClick={handleLogoClick}>
                             <img
                                 className="h-8 w-auto"
                                 src="/fctf-logo.png"
