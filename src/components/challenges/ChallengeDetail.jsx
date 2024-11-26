@@ -278,7 +278,7 @@ const ChallengeDetail = () => {
                     setUrl(detailsResponse.challenge_url || null);
                     setIsChallengeStarted(detailsResponse.is_started || false);
                     if (detailsResponse.is_started) {
-                        setUrl(data.challenge_url || null)
+                        setUrl(detailsResponse.challenge_url || null)
                     }
                 } else {
                     setUrl(null);
@@ -366,12 +366,12 @@ const ChallengeDetail = () => {
                     if (response.challenge_url) {
                         const currentSchema = window.location.protocol;
                         const challengeUrl = `${currentSchema}//${response.challenge_url}`;
-                        window.open(challengeUrl, "_blank");
+                        // window.open(challengeUrl, "_blank");
 
                         // Success message with SweetAlert
                         Swal.fire({
                             title: 'Challenge Started!',
-                            text: `Your challenge is now live. Click here to access: ${challengeUrl}`,
+                            html: `Your challenge is now live. Click <a href="${challengeUrl}" target="_blank" style="color: blue; text-decoration: underline;">here</a> to access it.`,
                             icon: 'success',
                             confirmButtonText: 'OK',
                         });

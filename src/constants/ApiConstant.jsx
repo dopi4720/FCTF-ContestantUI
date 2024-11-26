@@ -1,5 +1,6 @@
 export const BASE_URL = 'http://localhost:4000';
 
+
 export const LOGIN_PATH = '/api/login-contestant'
 export const USER_DETAILS = '/api/v1/users'
 
@@ -39,3 +40,7 @@ export const API_CHANGE_PASSWORD= '/api/changepassword'
 
 //dowload files
 export const API_FILE_DOWLOAD = "/api/files"
+
+//date-time config
+export const API_GET_DATE_CONFIG= '/api/get_date_config'
+

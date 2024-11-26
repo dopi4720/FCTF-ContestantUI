@@ -10,6 +10,7 @@ import TicketList from './components/ticket/TicketListPage';
 import TicketDetailPage from './components/ticket/TicketDetailPage';
 import Scoreboard from './components/scoreboard/Scoreboard';
 import UserProfile from './components/user/UserProfile';
+import HomePage from './components/home/HomePage';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -17,7 +18,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Template />} />
+        <Route path="/" element={<Template><HomePage /></Template>} />
         <Route path="/login" element={<LoginComponent />} />
         <Route path="/rankings" element={
           <Template>
