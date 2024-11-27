@@ -14,6 +14,7 @@ const HomePage = () => {
 
   const [statusMessage, setStatusMessage] = useState("Loading contest details...");
   const [isContestActive, setIsContestActive] = useState(false);
+  const [IsComing, setIsComming]= useState(false);
 
   useEffect(() => {
     const fetchDateConfig = async () => {
@@ -26,18 +27,20 @@ const HomePage = () => {
           if (message === "CTFd has not been started" && start_date) {
             const startDate = new Date(start_date * 1000);
             if (new Date() < startDate) {
-              setStatusMessage("Contest is starting soon!");
+              setStatusMessage("Contest is coming...");
+              setIsComming(true)
+              setIsContestActive(false)
               startCountdown(startDate);
             }
           } else if (message === "CTFd has been started" && end_date) {
             const endDate = new Date(end_date * 1000);
             if (new Date() < endDate) {
               setIsContestActive(true);
-              setStatusMessage("The contest is ongoing!");
+              setStatusMessage("Contest will be ended in ");
               startCountdown(endDate);
             }
           } else {
-            setStatusMessage("The contest has ended.");
+            setStatusMessage("The contest has ended");
           }
         } else {
           setStatusMessage("Error fetching contest details.");
@@ -108,7 +111,7 @@ const HomePage = () => {
         </h1>
         <p className="text-theme-color-neutral-content text-lg md:text-xl">
           {isContestActive
-            ? "Get ready for an amazing experience!"
+            ? "Get ready for an amazing experience! "
             : "Check back later for updates."}
         </p>
       </div>
@@ -138,7 +141,8 @@ const HomePage = () => {
           <TimeUnit value={timeLeft.seconds} label="Seconds" icon={<FiClock />} />
         </div>
       )}
-
+    
+    {IsComing && (
       <motion.button
         className="mt-12 px-8 py-4 bg-theme-color-primary text-white rounded-full font-bold text-lg shadow-lg hover:bg-theme-color-primary-dark focus:outline-none focus:ring-2 focus:ring-theme-color-primary focus:ring-opacity-50 transition-all duration-300"
         whileHover={{ scale: 1.05 }}
@@ -146,8 +150,8 @@ const HomePage = () => {
         aria-label="Register for the contest"
       >
         Register Now
-      </motion.button>
-
+      </motion.button>)}
+      
       <div className="mt-8 text-theme-color-neutral text-center">
         <p>Don't miss out on this opportunity!</p>
         <p className="mt-2">Mark your calendar and set your reminders.</p>

@@ -4,7 +4,7 @@ import { FaDownload } from 'react-icons/fa';
 import { FiAlertCircle, FiCheck, FiClock } from "react-icons/fi";
 import { useParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import { API_CHALLEGE_START, API_CHALLENGE_STOP, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
+import { API_CHALLEGE_START, API_CHALLENGE_STOP, APi_GET_CHALLENGES_HINTS, API_UNLOCK_HINTS, API_USER_PROFILE, BASE_URL, GET_CHALLENGE_DETAILS, SUBMIT_FLAG } from "../../constants/ApiConstant";
 import ApiHelper from "../../utils/ApiHelper";
 const ChallengeDetail = () => {
     const { id } = useParams();
@@ -30,6 +30,8 @@ const ChallengeDetail = () => {
     const [isStarting, setIsStarting] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState(null)
     const [isFetchDetailSuccess, setFetchDetailSuccess] = useState(false);
+    const [IsStopping ,setIsStopping]= useState(false)
+    const [message, setMessage]= useState(null)
     const descriptionRef = useRef(null);
 
     const handleRadioChange = (event) => {
@@ -148,6 +150,42 @@ const ChallengeDetail = () => {
     //CLICK UNLOCK TAIN DAYYYYYYYYYYYYYYYYYYYYYYYYY
     const handleUnlockHintClick = async (hintId, hintCost) => {
         try {
+            const api = new ApiHelper(BASE_URL);
+            const teamResponse= await api.get(`${API_USER_PROFILE}`)
+            const teamName= teamResponse?.data?.team
+            if(!teamName){
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Unable to identify the current team. Please log in again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+                return;
+            }
+            const localStorageKey = `unlockedHints_team_${teamName}_challenge_${challengeId}`;
+            const unlockedHints = JSON.parse(localStorage.getItem(localStorageKey)) || {};
+
+        // Check if the hint ID is marked as unlocked
+        if (unlockedHints[hintId]) {
+            // Fetch the hint details directly from the server
+            const hintDetailsResponse = await FetchHintDetails(hintId);
+            if (hintDetailsResponse?.data) {
+                Swal.fire({
+                    title: 'Hint Details',
+                    text: `Hint unlocked! Details: ${hintDetailsResponse.data.content || "No content available."}`,
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                });
+            } else {
+                Swal.fire({
+                    title: 'Hint Details',
+                    text: "Hint unlocked, but no details are available.",
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                });
+            }
+            return;
+        }
             // Show SweetAlert confirmation before proceeding
             const result = await Swal.fire({
                 title: 'Are you sure?',
@@ -163,6 +201,9 @@ const ChallengeDetail = () => {
                 // Call the unlock API
                 const response = await HintUnlocks(hintId);
                 if (response?.success) {
+                    unlockedHints[hintId] = true;
+                    localStorage.setItem(localStorageKey, JSON.stringify(unlockedHints));
+                    const hintDetailsResponse = await FetchHintDetails(hintId);
                     // If the hint was unlocked successfully, fetch and show the details
                     if (hintDetailsResponse?.data) {
                         // Show success with hint details using SweetAlert
@@ -172,6 +213,7 @@ const ChallengeDetail = () => {
                             icon: 'success',
                             confirmButtonText: 'OK',
                         });
+                        
                     } else {
                         // Show message when hint is unlocked but no details are available
                         Swal.fire({
@@ -279,6 +321,7 @@ const ChallengeDetail = () => {
                     setIsChallengeStarted(detailsResponse.is_started || false);
                     if (detailsResponse.is_started) {
                         setUrl(detailsResponse.challenge_url || null)
+                        setMessage(detailsResponse.message || "Challenge started by other member in your team. ")
                     }
                 } else {
                     setUrl(null);
@@ -304,7 +347,7 @@ const ChallengeDetail = () => {
                         clearInterval(timerRef.current);
                         return 0;
                     }
-                    return prevTime - 1; // Decrease time by 1 second
+                    return prevTime - 1; 
                 });
             }, 1000);
         } else {
@@ -312,24 +355,7 @@ const ChallengeDetail = () => {
         }
         return () => clearInterval(timerRef.current); // Cleanup on unmount
     }, [isChallengeStarted, timeRemaining]);
-    // SHOW HINT DETAILS DAYYYYYYYYYYYYYYYYYYYY
-    // const handeHintDetailClick = async (hintId) => {
-    //     const hintDetailsResponse = await FetchHintDetails(hintId);
-    //     if (hintDetailsResponse?.data) {
-    //         setModalMessage(
-    //             `Hint: ${hintDetailsResponse.data.content || "Details not available"} `
-    //         );
-    //         setIsModalOpen(true)
-    //     } else {
-    //         setModalMessage("Unable to fetch hint details.");
-    //         setIsModalOpen(true)
-    //     }
-    // }
-    // const handleHintDetailClick = (hint) => {
-    //     setSelectedHint(hint); // Store the clicked hint in state
-    //     setIsConfirmModalOpen(true); // Open the confirmation modal
-    // };
-    // CLICK START BUTTON
+   
     const handleStartChallenge = async () => {
         if (!challengeId) {
             Swal.fire({
@@ -398,31 +424,56 @@ const ChallengeDetail = () => {
                     });
                 }
             } else {
-                // If the response indicates failure to start the challenge
+                
                 Swal.fire({
                     title: 'Error!',
-                    text: `Failed to start the challenge. ${response.error || "Unknown error"}`,
+                    text: `Failed to start the challenge.\n${response.message || response.error || "An error occurs, please try again later!"}`,
                     icon: 'error',
                     confirmButtonText: 'OK',
                 });
                 console.error("Failed to start challenge:", response.error || "Unknown error");
             }
         } catch (err) {
-            // If an error occurs during the API call
+            
+            const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || err;
+        if (errorMessage.includes("User or TeamId")) {
             Swal.fire({
-                title: 'Error!',
-                text: `Failed to start the challenge. ${err.message || err}`,
+                title: 'Authentication Needed',
+                text: 'We couldn’t verify your session. Please log in again to continue.',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+            });
+        } else if (errorMessage.includes("Connection url failed")) {
+            Swal.fire({
+                title: 'Connection Issue',
+                text: 'We couldn’t connect to the server. Please check your internet connection or try again later.',
+                icon: 'error',
+                confirmButtonText: 'Retry',
+            });
+        } else if (errorMessage.includes("Redis connection failed")) {
+            Swal.fire({
+                title: 'Something Went Wrong',
+                text: 'We’re having trouble connecting to our servers. Please try again later or contact support if this keeps happening.',
                 icon: 'error',
                 confirmButtonText: 'OK',
             });
-            console.error("Error starting challenge:", err.message || err);
-        } finally {
-            setIsStarting(false);
+        } else {
+            Swal.fire({
+                title: 'Error',
+                text: errorMessage || 'Something went wrong on our end. Please refresh the page or try again later.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
         }
+        console.error("Error starting challenge:", errorMessage);
+    } finally {
+        setIsStarting(false);
+    }
     };
 
     const handleStopChallenge = async () => {
         const api = new ApiHelper(BASE_URL);
+        setIsStopping(true)
         try {
             const response = await api.postForm(API_CHALLENGE_STOP, {
                 challenge_id: challengeId,
@@ -433,7 +484,7 @@ const ChallengeDetail = () => {
                 setTimeLeft(null);
                 clearInterval(timerRef.current);
                 setUrl(null)
-                // Success message with SweetAlert
+
                 Swal.fire({
                     title: 'Success!',
                     text: 'Challenge stopped successfully.',
@@ -441,24 +492,79 @@ const ChallengeDetail = () => {
                     confirmButtonText: 'OK',
                 });
             } else {
-                // If stopping the challenge fails
+                const errorMessage = response.message || response.error || "An error occurred, please try again later!";
                 Swal.fire({
-                    title: 'Error!',
-                    text: 'Failed to stop challenge. Try again.',
+                    title: 'Oops!',
+                    text: errorMessage.includes("Challenge not started or already stopped")
+                        ? 'This challenge is not currently active or has already been stopped.'
+                        : errorMessage,
+                    icon: 'error',
+                    confirmButtonText: 'Try Again',
+                });
+                console.error("Failed to stop challenge:", errorMessage);
+            }
+        } catch (err) {
+            const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || err;
+            if (errorMessage.includes("ChallengeId is required")) {
+                Swal.fire({
+                    title: 'Invalid Request',
+                    text: 'No challenge ID was provided. Please try again.',
                     icon: 'error',
                     confirmButtonText: 'OK',
                 });
-                console.error("Failed to stop challenge:", response.error || "Unknown error");
+            } else if (errorMessage.includes("Token not found")) {
+                Swal.fire({
+                    title: 'Authentication Needed',
+                    text: 'We couldn’t verify your session. Please log in again to continue.',
+                    icon: 'warning',
+                    confirmButtonText: 'Log In',
+                });
+            } else if (errorMessage.includes("User not found")) {
+                Swal.fire({
+                    title: 'User Not Found',
+                    text: 'We couldn’t find your account in our system. Please contact support if the issue persists.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+            } else if (errorMessage.includes("User no join team")) {
+                Swal.fire({
+                    title: 'Not in a Team',
+                    text: 'You must join a team to stop this challenge.',
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                });
+            } else if (errorMessage.includes("Challenge not found")) {
+                Swal.fire({
+                    title: 'Challenge Not Found',
+                    text: 'The challenge you’re trying to stop doesn’t exist. Please verify the challenge ID.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+            } else if (errorMessage.includes("Challenge not started or already stopped")) {
+                Swal.fire({
+                    title: 'No Active Challenge',
+                    text: 'This challenge has not started or has already been stopped.',
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                });
+            } else if (errorMessage.includes("Failed to connect to stop API")) {
+                Swal.fire({
+                    title: 'Connection Issue',
+                    text: 'We couldn’t connect to the server to stop the challenge. Please try again later.',
+                    icon: 'error',
+                    confirmButtonText: 'Retry',
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: errorMessage || 'Something went wrong on our end. Please refresh the page or try again later.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
             }
-        } catch (err) {
-            // If an error occurs during the API call
-            Swal.fire({
-                title: 'Error!',
-                text: `Error stopping challenge: ${err.message || err}`,
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-            console.error("Error stopping challenge:", err);
+            console.error("Error stopping challenge:", errorMessage);
+        } finally {
+            setIsStopping(false);
         }
     };
 
@@ -473,9 +579,7 @@ const ChallengeDetail = () => {
                 submission: answer,
                 generatedToken: localStorage.getItem("accessToken")
             };
-
             const response = await api.postForm(SUBMIT_FLAG, data);
-
             if (response?.data.status === "correct") {
                 // Success message for correct flag
                 Swal.fire({
@@ -522,10 +626,10 @@ const ChallengeDetail = () => {
             }
 
         } catch (error) {
-            // Handle any errors during submission
+            
             Swal.fire({
-                title: 'Error!',
-                text: "Error submitting flag. Please try again later.",
+                title: 'No Submission Left!',
+                text: error.response?.data?.data.message ||"Error submitting flag. Please try again later.",
                 icon: 'error',
                 confirmButtonText: 'OK',
             });
@@ -567,7 +671,7 @@ const ChallengeDetail = () => {
                                 <>
                                     <h1 className="text-theme-color-neutral-content text-lg mb-6">
                                         Max attempts: {challenge.max_attempts} <br />
-                                        Submission: {challenge.attemps} times <br />
+                                        Submission: {challenge.attemps > 0 ? challenge.attemps: "UNLIMITED"} times <br />
                                         Type: {challenge.type}
                                         <br />
                                         <br />
@@ -601,9 +705,13 @@ const ChallengeDetail = () => {
                                                 </div>
                                             )}
                                             {url && (
+                                                
                                                 <pre className="bg-white p-4 rounded-md whitespace-pre-wrap break-words">
+                                                    {message} <br></br>
                                                     Your connection info is: {url}
+
                                                 </pre>
+                                                
                                             )}
                                         </div>
                                     </div>
@@ -708,14 +816,45 @@ const ChallengeDetail = () => {
                             )}
                             {/* Display the Stop Challenge button if the challenge is started and require_deploy is true */}
                             {isChallengeStarted && challenge?.require_deploy && !isSubmitted && (
-                                <button
-                                    type="button"
-                                    onClick={handleStopChallenge}
-                                    className="w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white"
-                                >
-                                    Stop Challenge
-                                </button>
-                            )}
+    <button
+        type="button"
+        onClick={handleStopChallenge}
+        disabled={IsStopping} // Disable the button during API call
+        className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+            IsStopping
+                ? "bg-red-400 cursor-not-allowed"
+                : "bg-red-600 hover:bg-red-700 text-white"
+        }`}
+    >
+        {IsStopping ? (
+            <span className="flex items-center space-x-2">
+                <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                >
+                    <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                    ></circle>
+                    <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                </svg>
+                <span>Stopping...</span>
+            </span>
+        ) : (
+            "Stop Challenge"
+        )}
+    </button>
+)}
                         </form>
 
                     </div>

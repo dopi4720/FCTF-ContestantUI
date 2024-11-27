@@ -159,6 +159,7 @@ const UserProfile = () => {
         } catch (error) {
             if (error.response) {
                 const { status, data } = error.response;
+                console.log(status, data)
                 if (status === 400 && data && data.errors) {
                     switch (data.errors) {
                         case "Both 'password' and 'confirm' fields are required.":
@@ -180,7 +181,7 @@ const UserProfile = () => {
                             showModalMessage("Authentication failed. Please log in again.", "error");
                             break;
                         default:
-                            showModalMessage(data.errors || "An unexpected error occurred.", "error");
+                            showModalMessage(data.errors.confirm || "An unexpected error occurred.", "error");
                     }
                 } else {
                     showModalMessage("An unexpected error occurred. Please try again.", "error");

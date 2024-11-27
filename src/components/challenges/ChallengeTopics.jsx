@@ -7,7 +7,7 @@ import Sidebar from "./Sidebar";
 const ChallengeTopics = () => {
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Track sidebar open state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Track sidebar open state
 
   useEffect(() => {
     const fetchCategories = async () => {

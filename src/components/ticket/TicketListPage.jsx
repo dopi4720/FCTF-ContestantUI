@@ -27,7 +27,12 @@ const TicketList = () => {
       }
     } catch (err) {
       console.error("Error occurred:", err);
-      setError("Could not load tickets. Please try again.");
+      if(err.response.status===403){
+        setError("F-CTF has ended. Please wait until our new notification")
+      }else{
+        setError("Could not load tickets. Please try again.");
+      }
+      
     }
   };
 
