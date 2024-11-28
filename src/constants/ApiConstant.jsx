@@ -1,5 +1,5 @@
-export const BASE_URL = 'https://admin.fctf.site';
-
+export const BASE_URL = '';
+export const MANAGEMENT_API_URL = 'https://admin.fctf.site';
 
 export const LOGIN_PATH = '/api/login-contestant'
 export const USER_DETAILS = '/api/v1/users'
