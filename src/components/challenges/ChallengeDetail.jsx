@@ -391,11 +391,11 @@ const ChallengeDetail = () => {
 
                     if (response.challenge_url) {
                         const currentSchema = window.location.protocol;
-                        const challengeUrl = `${currentSchema}//${response.challenge_url}`;
+                        const challengeUrl= `http://${response.challenge_url}`;
                     
                         // Regular expression to check if `challengeUrl` contains a valid domain name
                         const isValidUrl = /^https?:\/\/[^\s/$.?#].[^\s]*$/.test(challengeUrl);
-                    
+                        console.log(challengeUrl)
                         if (isValidUrl) {
                             // Success message with a clickable link
                             Swal.fire({
