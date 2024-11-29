@@ -44,3 +44,6 @@ export const API_FILE_DOWLOAD = "/api/files"
 //date-time config
 export const API_GET_DATE_CONFIG= '/api/get_date_config'
 
+//notifications
+export const API_GET_NOTIFICATION= '/api/v1/notifications'
+

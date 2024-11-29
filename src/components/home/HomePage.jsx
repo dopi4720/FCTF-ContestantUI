@@ -27,7 +27,7 @@ const HomePage = () => {
           if (message === "CTFd has not been started" && start_date) {
             const startDate = new Date(start_date * 1000);
             if (new Date() < startDate) {
-              setStatusMessage("Contest is coming...");
+              setStatusMessage("CONTEST IS COMING...");
               setIsComming(true)
               setIsContestActive(false)
               startCountdown(startDate);
@@ -36,11 +36,11 @@ const HomePage = () => {
             const endDate = new Date(end_date * 1000);
             if (new Date() < endDate) {
               setIsContestActive(true);
-              setStatusMessage("Contest will be ended in ");
+              setStatusMessage("CONTEST WILL BE ENDED IN ");
               startCountdown(endDate);
             }
           } else {
-            setStatusMessage("The contest has ended");
+            setStatusMessage("THE CONTEST HAS ENDED");
           }
         } else {
           setStatusMessage("Error fetching contest details.");

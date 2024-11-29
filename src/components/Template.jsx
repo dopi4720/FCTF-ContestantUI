@@ -1,26 +1,78 @@
+import { format } from 'date-fns';
 import React, { useEffect, useState } from "react";
-import { FaFlag, FaSignOutAlt, FaUser } from "react-icons/fa";
+import { FaBell, FaFlag, FaSignOutAlt, FaUser } from "react-icons/fa";
 import { FaRankingStar } from "react-icons/fa6";
 import { IoTicket } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
+import { API_GET_NOTIFICATION, BASE_URL } from "../constants/ApiConstant";
 import { ACCESS_TOKEN_KEY } from "../constants/LocalStorageKey";
+import ApiHelper from "../utils/ApiHelper";
 
 const Template = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 3;
+
     const navigate = useNavigate();
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentNotifications = notifications.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(notifications.length / itemsPerPage);
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
+
+    const handlePreviousPage = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
+
     const menuItems = [
         { title: "Challenges", icon: <FaFlag />, url: "/topics" },
         { title: "Score Board", icon: <FaRankingStar />, url: "/rankings" },
         { title: "Ticket", icon: <IoTicket />, url: "/tickets" },
-        { title: "Profile", icon: <FaUser />, url: "/profile" }
+        { title: "Profile", icon: <FaUser />, url: "/profile" },
+        {
+            title: "Notifications",
+            icon: <FaBell />,
+            onClick: () => setIsNotificationOpen(!isNotificationOpen)
+        }
     ];
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            const api = new ApiHelper(BASE_URL);
+            try {
+                const response = await api.get(API_GET_NOTIFICATION);
+                if (response.success) {
+                    const sortedNotifications = response.data.sort(
+                        (a, b) => new Date(b.date) - new Date(a.date)
+                    );
+                    setNotifications(sortedNotifications);
+                } else {
+                    console.error("Error fetching notifications");
+                }
+            } catch (error) {
+                console.error("Error fetching notifications:", error);
+            }
+        };
+
+        fetchNotifications();
+    }, []);
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
     };
 
+    const formatToCustomDateTime = (isoString) => {
+        return format(new Date(isoString), "dd/MM/yyyy HH:mm");
+    };
+
     const handleLogout = () => {
-        console.log("Logout button clicked"); // Check if this logs
+        console.log("Logout button clicked");
         localStorage.removeItem(ACCESS_TOKEN_KEY);
         navigate('/login');
     };
@@ -31,9 +83,10 @@ const Template = ({ children }) => {
         }
     }, [navigate]);
 
-    const handleLogoClick= ()=>{
-        navigate('/')
-    }
+    const handleLogoClick = () => {
+        navigate('/');
+    };
+
     return (
         <div className="min-h-screen flex flex-col">
             <nav className="bg-white border-b border-gray-200">
@@ -54,14 +107,68 @@ const Template = ({ children }) => {
                         <div className="hidden md:flex flex-1 justify-center">
                             <div className="flex items-center space-x-4">
                                 {menuItems.map((item, index) => (
-                                    <button
-                                        key={index}
-                                        onClick={() => navigate(item.url)}
-                                        className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-theme-color-primary hover:text-theme-color-primary-dark hover:bg-primary-low transition-all duration-300"
-                                    >
-                                        <span className="mr-2 text-lg">{item.icon}</span>
-                                        {item.title}
-                                    </button>
+                                    <div key={index} className="relative">
+                                        <button
+                                            onClick={() => {
+                                                if (item.onClick) {
+                                                    item.onClick();
+                                                } else {
+                                                    navigate(item.url);
+                                                }
+                                            }}
+                                            className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-theme-color-primary hover:text-theme-color-primary-dark hover:bg-primary-low transition-all duration-300"
+                                        >
+                                            <span className="mr-2 text-lg">{item.icon}</span>
+                                            {item.title}
+                                        </button>
+                                        {item.title === "Notifications" && isNotificationOpen && (
+                                            <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50">
+                                                {currentNotifications.length > 0 ? (
+                                                    currentNotifications.map((notification) => (
+                                                        <div
+                                                            key={notification.id}
+                                                            className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-all duration-300"
+                                                        >
+                                                            <div className="flex justify-between items-start">
+                                                                <p className="text-sm font-medium text-gray-900">
+                                                                    {notification.title}
+                                                                </p>
+                                                                <span className="text-xs text-gray-500">
+                                                                    {formatToCustomDateTime(notification.date)}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-xs text-gray-600 mt-1">
+                                                                {notification.content}
+                                                            </p>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="px-4 py-3 text-gray-500 text-sm">
+                                                        No notifications available
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center justify-between px-4 py-2 border-t border-gray-200">
+                                                    <button
+                                                        onClick={handlePreviousPage}
+                                                        disabled={currentPage === 1}
+                                                        className="text-sm text-theme-color-primary hover:text-theme-color-primary-dark disabled:opacity-50"
+                                                    >
+                                                        Previous
+                                                    </button>
+                                                    <span className="text-xs text-gray-500">
+                                                        Page {currentPage} of {totalPages}
+                                                    </span>
+                                                    <button
+                                                        onClick={handleNextPage}
+                                                        disabled={currentPage === totalPages}
+                                                        className="text-sm text-theme-color-primary hover:text-theme-color-primary-dark disabled:opacity-50"
+                                                    >
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
                         </div>
@@ -125,14 +232,6 @@ const Template = ({ children }) => {
                     {children}
                 </div>
             </main>
-
-            <footer className="bg-white shadow-lg mt-auto">
-                <div className="max-w-7xl mx-auto py-4 px-4">
-                    <p className="text-center text-theme-color-primary font-medium hover:text-theme-color-primary-dark transition-all duration-300">
-                        Powered By F-CTF Team @2024
-                    </p>
-                </div>
-            </footer>
         </div>
     );
 };
