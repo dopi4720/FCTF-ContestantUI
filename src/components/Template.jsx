@@ -12,6 +12,7 @@ const Template = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 3;
 
@@ -30,17 +31,25 @@ const Template = ({ children }) => {
         if (currentPage > 1) setCurrentPage(currentPage - 1);
     };
 
-    const menuItems = [
-        { title: "Challenges", icon: <FaFlag />, url: "/topics" },
-        { title: "Score Board", icon: <FaRankingStar />, url: "/rankings" },
-        { title: "Ticket", icon: <IoTicket />, url: "/tickets" },
-        { title: "Profile", icon: <FaUser />, url: "/profile" },
-        {
-            title: "Notifications",
-            icon: <FaBell />,
-            onClick: () => setIsNotificationOpen(!isNotificationOpen)
-        }
-    ];
+    const markAsRead = (id) => {
+        setNotifications((prev) =>
+            prev.map((notification) =>
+                notification.id === id ? { ...notification, isRead: true } : notification
+            )
+        );
+    };
+
+    const clearNotifications = () => {
+        setNotifications([]);
+    };
+
+    const updateUnreadCount = () => {
+        setUnreadCount(notifications.filter((notification) => !notification.isRead).length);
+    };
+
+    useEffect(() => {
+        updateUnreadCount();
+    }, [notifications]);
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -48,9 +57,10 @@ const Template = ({ children }) => {
             try {
                 const response = await api.get(API_GET_NOTIFICATION);
                 if (response.success) {
-                    const sortedNotifications = response.data.sort(
-                        (a, b) => new Date(b.date) - new Date(a.date)
-                    );
+                    const sortedNotifications = response.data.map((notification) => ({
+                        ...notification,
+                        isRead: false, 
+                    })).sort((a, b) => new Date(b.date) - new Date(a.date));
                     setNotifications(sortedNotifications);
                 } else {
                     console.error("Error fetching notifications");
@@ -86,6 +96,27 @@ const Template = ({ children }) => {
     const handleLogoClick = () => {
         navigate('/');
     };
+
+    const menuItems = [
+        { title: "Challenges", icon: <FaFlag />, url: "/topics" },
+        { title: "Score Board", icon: <FaRankingStar />, url: "/rankings" },
+        { title: "Ticket", icon: <IoTicket />, url: "/tickets" },
+        { title: "Profile", icon: <FaUser />, url: "/profile" },
+        {
+            title: "Notifications",
+            icon: (
+                <div className="relative">
+                    <FaBell />
+                    {unreadCount > 0 && (
+                        <span className="absolute top-0 right-0 text-xs bg-red-500 text-white rounded-full px-1">
+                            {unreadCount}
+                        </span>
+                    )}
+                </div>
+            ),
+            onClick: () => setIsNotificationOpen(!isNotificationOpen),
+        }
+    ];
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -123,11 +154,17 @@ const Template = ({ children }) => {
                                         </button>
                                         {item.title === "Notifications" && isNotificationOpen && (
                                             <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50">
+                                            
                                                 {currentNotifications.length > 0 ? (
                                                     currentNotifications.map((notification) => (
                                                         <div
                                                             key={notification.id}
-                                                            className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-all duration-300"
+                                                            className={`px-4 py-3 cursor-pointer transition-all duration-300 ${
+                                                                notification.isRead
+                                                                    ? "bg-gray-100"
+                                                                    : "hover:bg-gray-50"
+                                                            }`}
+                                                            onClick={() => markAsRead(notification.id)}
                                                         >
                                                             <div className="flex justify-between items-start">
                                                                 <p className="text-sm font-medium text-gray-900">
@@ -206,7 +243,6 @@ const Template = ({ children }) => {
                             </button>
                         </div>
                     </div>
-
                     <div className={`${isMenuOpen ? "block" : "hidden"} md:hidden"}`}>
                         <div className="px-2 pt-2 pb-3 space-y-1">
                             {menuItems.map((item, index) => (
@@ -226,7 +262,6 @@ const Template = ({ children }) => {
                     </div>
                 </div>
             </nav>
-
             <main className="flex-grow bg-gradient-to-b from-primary-low to-white">
                 <div className="max-w-7xl mx-auto">
                     {children}

@@ -2,8 +2,10 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
-import { BASE_URL, LOGIN_PATH } from "../../constants/ApiConstant";
+import Swal from "sweetalert2";
+import { API_GET_REGISTER_STATE, BASE_URL, LOGIN_PATH } from "../../constants/ApiConstant";
 import { ACCESS_TOKEN_KEY } from "../../constants/LocalStorageKey";
+import ApiHelper from "../../utils/ApiHelper";
 
 const LoginComponent = () => {
   const navigate = useNavigate();
@@ -17,13 +19,30 @@ const LoginComponent = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRegisterVisible, setIsRegisterVisible]= useState(false)
 
   useEffect(() => {
     if (localStorage.getItem(ACCESS_TOKEN_KEY)) {
-      
       navigate('/');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const getRegisterState = async () => {
+      const api = new ApiHelper(BASE_URL);
+      try {
+        const response = await api.get(API_GET_REGISTER_STATE);
+        if (response.success) {
+          setIsRegisterVisible(response.Visibly);
+        } else {
+          console.error("Failed to get registration config:", response.error);
+        }
+      } catch (error) {
+        console.error("An error occurred while fetching registration config:", error);
+      }
+    };
+    getRegisterState();
+  }, []);
 
   const validateUsername = (username) => {
     const usernameRegex = /^[a-zA-Z0-9]+$/;
@@ -67,15 +86,55 @@ const LoginComponent = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post(BASE_URL + LOGIN_PATH, formData);
+      const response = await axios.post(BASE_URL + LOGIN_PATH, formData, {
+        validateStatus: (status) => status < 500, // Accept all statuses below 500
+      });
 
       if (response.status === 200) {
         localStorage.setItem(ACCESS_TOKEN_KEY, response.data.generatedToken);
         console.log("Login successful");
-       
         navigate('/');
+      }else if (response.status === 400) {
+        const errorMessage =
+          response.data.msg || response.data.message || 'Invalid input. Please check and try again!';
+  
+        if (errorMessage.toLowerCase().includes('team')) {
+          
+          Swal.fire({
+            title: 'Team Confirmation Required',
+            text: errorMessage,
+            icon: 'info',
+            confirmButtonText: 'To the Team Confirm Page',
+          }).then(() => {
+            navigate('/team-confirm');
+          });
+        } else {
+          
+          Swal.fire({
+            title: 'Login Failed!',
+            text: errorMessage,
+            icon: 'error',
+            confirmButtonText: 'GOT IT!',
+          });
+        }
+      } else {
+        
+        Swal.fire({
+          title: 'Login Failed!',
+          text: response.data.msg || response.data.message || 'Unexpected error occurred. Please try again!',
+          icon: 'error',
+          confirmButtonText: 'GOT IT!',
+        });
       }
+    
     } catch (error) {
+      Swal.fire({
+        title: 'Login Fail!',
+        text: error.response.data.msg || error.response.data.message || 'Invalid username or password. Please try again!',
+        icon:'error',
+        confirmButtonText:'GOT IT!'
+      }
+    )
       console.error("Login failed:", error);
     } finally {
       setIsLoading(false);
@@ -171,6 +230,19 @@ const LoginComponent = () => {
             )}
           </button>
         </form>
+        {isRegisterVisible && (
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <a
+                href="/register"
+                className="text-blue-600 hover:underline"
+              >
+                Register here
+              </a>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

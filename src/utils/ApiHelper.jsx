@@ -20,6 +20,8 @@ class ApiHelper {
       (error) => {
         if (error.response && error.response.status === 401) {
           window.location.href = "/login"; // Chuyển hướng đến trang đăng nhập
+        }else if(error.response && error.response.status===403){
+          window.location.href='/forbidden';
         }
         return Promise.reject(error);
       }

@@ -1,8 +1,10 @@
 export const BASE_URL = '';
 export const MANAGEMENT_API_URL = 'https://admin.fctf.site';
+// export const MANAGEMENT_API_URL= 'http://127.0.0.1:4000/'
 
 export const LOGIN_PATH = '/api/login-contestant'
 export const USER_DETAILS = '/api/v1/users'
+export const REGISTER_CONTESTANT= '/api/register-contestant'
 
 //Cache
 export const API_CHALLENGGE_GET_CACHE = "/api/challenge/check_cache"
@@ -38,11 +40,16 @@ export const API_TEAM_POINT = '/api/v1/teams/contestant'
 export const API_TEAM_PERFORMANCE = '/team/solves'
 export const API_CHANGE_PASSWORD= '/api/changepassword'
 
+//Team
+export const API_CREATE_NEW_TEAM= '/api/team/create'
+export const API_JOIN_TEAM= '/api/team/join'
+
 //dowload files
 export const API_FILE_DOWLOAD = "/api/files"
 
-//date-time config
+//config
 export const API_GET_DATE_CONFIG= '/api/get_date_config'
+export const API_GET_REGISTER_STATE= '/api/get_register_config'
 
 //notifications
 export const API_GET_NOTIFICATION= '/api/v1/notifications'
