@@ -1,5 +1,6 @@
 import React from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { ACCESS_TOKEN_KEY } from "../../constants/LocalStorageKey";
 
 const TeamComponent = () => {
     const navigate= useNavigate()
@@ -21,6 +22,15 @@ const TeamComponent = () => {
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
           >
             Create a New Team
+          </button>
+          <button
+            onClick={() => {
+              localStorage.removeItem(ACCESS_TOKEN_KEY)
+              navigate('/login')
+            }}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
+          >
+            Back to Login Page
           </button>
         </div>
       </div>

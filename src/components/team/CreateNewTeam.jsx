@@ -1,9 +1,9 @@
-import axios from "axios";
 import React, { useState } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { API_CREATE_NEW_TEAM, BASE_URL } from "../../constants/ApiConstant";
+import ApiHelper from "../../utils/ApiHelper";
 
 const CreateTeamComponent = () => {
   const navigate = useNavigate();
@@ -26,11 +26,11 @@ const CreateTeamComponent = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post(BASE_URL + API_CREATE_NEW_TEAM, formData, {
+      const api= new ApiHelper(BASE_URL)
+      const response = await api.post(API_CREATE_NEW_TEAM, formData, {
         validateStatus: (status) => status < 500 // Accept all statuses below 500
       });
-
-      if (response.status === 200) {
+      if (response.success) {
         Swal.fire({
           title: "Team Created!",
           text: "You have successfully created a team.",
@@ -42,15 +42,16 @@ const CreateTeamComponent = () => {
       } else {
         Swal.fire({
           title: "Create Team Failed!",
-          text: response.data.msg || "Unexpected error occurred. Please try again!",
+          text: response.data.errors|| response.data.message|| response.data.msg || "Unexpected error occurred. Please try again!",
           icon: "error",
           confirmButtonText: "GOT IT!"
         });
       }
     } catch (error) {
+      console.log(error.response.data.message)
       Swal.fire({
         title: "Create Team Failed!",
-        text: "An error occurred. Please try again later.",
+        text: error.response.data.message || error.response.data.errors|| error.response.data.msg || "Unexpected error occurred. Please try again!",
         icon: "error",
         confirmButtonText: "GOT IT!"
       });
@@ -64,7 +65,7 @@ const CreateTeamComponent = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
         <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">
-          Join a Team
+          Create New Team
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

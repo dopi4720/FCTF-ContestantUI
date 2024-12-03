@@ -106,6 +106,7 @@ const LoginComponent = () => {
             icon: 'info',
             confirmButtonText: 'To the Team Confirm Page',
           }).then(() => {
+            localStorage.setItem(ACCESS_TOKEN_KEY, response.data.generatedToken);
             navigate('/team-confirm');
           });
         } else {

@@ -1,9 +1,9 @@
-import axios from "axios";
 import React, { useState } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { API_JOIN_TEAM, BASE_URL } from "../../constants/ApiConstant";
+import ApiHelper from "../../utils/ApiHelper";
 
 const JoinTeamComponent = () => {
   const navigate = useNavigate();
@@ -23,34 +23,42 @@ const handleInputChange = (e) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setIsLoading(true);
     try {
-      const response = await axios.post(BASE_URL + API_JOIN_TEAM, formData, {
+      const api= new ApiHelper(BASE_URL)
+      const response = await api.post(API_JOIN_TEAM, formData, {
         validateStatus: (status) => status < 500 // Accept all statuses below 500
       });
 
-      if (response.status === 200) {
+      if (response.success) {
         Swal.fire({
           title: "Team Joined!",
           text: "You have successfully joined the team.",
           icon: "success",
-          confirmButtonText: "Go to Dashboard",
+          confirmButtonText: "Go to Home Page",
         }).then(() => {
           navigate("/");
         });
       } else {
         Swal.fire({
           title: "Join Team Failed!",
-          text: response.data.msg || "Unexpected error occurred. Please try again!",
+          text: response.data.message|| response.data.errors || response.data.msg || "Unexpected error occurred. Please try again!",
           icon: "error",
           confirmButtonText: "GOT IT!"
         });
       }
     } catch (error) {
+      if(error.response.data.team){
+        Swal.fire({
+          title: "Join Team Failed!",
+          text: error.response.data.message||error.response.data.errors|| error.response.data.msg||"An error occurred. Please try again later.",
+          icon: "info",
+          confirmButtonText: "Go to home page"
+        }).then(()=> {navigate('/')});
+      }
       Swal.fire({
         title: "Join Team Failed!",
-        text: "An error occurred. Please try again later.",
+        text: error.response.data.message||error.response.data.errors|| error.response.data.msg||"An error occurred. Please try again later.",
         icon: "error",
         confirmButtonText: "GOT IT!"
       });
